@@ -1,0 +1,8 @@
+g++ -MM *.cpp
+CameraMonitor.o: CameraMonitor.cpp Configuration.h CameraMonitor.h \
+ TargetProcessor.h ReportingThread.h
+Configuration.o: Configuration.cpp Configuration.h
+main.o: main.cpp ReportingThread.h CameraMonitor.h TargetProcessor.h \
+ Configuration.h
+ReportingThread.o: ReportingThread.cpp ReportingThread.h
+TargetProcessor.o: TargetProcessor.cpp TargetProcessor.h Configuration.h
