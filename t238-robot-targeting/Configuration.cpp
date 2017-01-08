@@ -12,9 +12,10 @@ void ConfigurationInitialize()
     memset(&Config, 0, sizeof(Config));
 
     Config.DebugMode = DM_Normal;
-    Config.ShowDebugFrameWindow = true;
+    Config.ShowDebugFrameWindow = false;
     Config.AngleWidth = 60.0;
-    Config.RobotPort = DEFAULT_ROBOT_PORT;
-    Config.RobotIPAddress = DEFAULT_ROBOT_IP;
+    strncpy(Config.RobotPort, DEFAULT_ROBOT_PORT, sizeof(Config.RobotPort));
+    strncpy(Config.RobotIPAddress, DEFAULT_ROBOT_IP,
+        sizeof(Config.RobotIPAddress));
 }
 

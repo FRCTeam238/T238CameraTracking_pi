@@ -15,8 +15,10 @@ struct Configuration
     bool ShowDebugFrameWindow;
     double AngleWidth;
 
-    std::string RobotPort;
-    std::string RobotIPAddress;
+    char RobotPort[256];
+    char RobotIPAddress[256];
+    //std::string RobotPort;
+    //std::string RobotIPAddress;
 };
 
 extern Configuration Config;
