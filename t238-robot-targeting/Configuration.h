@@ -11,14 +11,21 @@ enum DebugModeSetting
 
 struct Configuration
 {
-    DebugModeSetting DebugMode;
-    bool ShowDebugFrameWindow;
     double AngleWidth;
 
-    char RobotPort[256];
-    char RobotIPAddress[256];
-    //std::string RobotPort;
-    //std::string RobotIPAddress;
+    // robot port
+    char RB_Port[256];
+    char RB_IPAddress[256];
+
+    // debug channel
+    bool DC_Enable;
+    char DC_Port[256];
+    char DC_IPAddress[256];
+
+    // show the debug information
+    DebugModeSetting DebugMode;
+    bool ShowDebugFrameWindow;
+
 };
 
 extern Configuration Config;

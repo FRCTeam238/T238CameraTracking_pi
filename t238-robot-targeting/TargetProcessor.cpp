@@ -39,8 +39,8 @@ void TargetProcessor::Process(cv::Mat frame)
     frame = threshold.Process(frame);
 
     cv::Mat ccframe = frame.clone();
-    ContourList contours = contourBuilder.Process(ccframe);
-    mHull = hullBuilder.Process(contours);
+    mContours = contourBuilder.Process(ccframe);
+    mHull = hullBuilder.Process(mContours);
 
 #if 0
     static int frameCount = 0;

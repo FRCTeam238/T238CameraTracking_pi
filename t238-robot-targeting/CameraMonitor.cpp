@@ -185,6 +185,11 @@ void CameraMonitor::CalculateHull(cv::Mat frame, ContourList &contours,
         //cout << "center_y=" << calcs.center_y << endl;
 
         double dd = ((double)calcs.center_x / (double)frame.size().width);
+        double angle = (Config.AngleWidth * dd) -
+                (Config.AngleWidth / 2.0);
+        calcs.angle = angle;
+
+#if 0
         cout << "ap="
             << calcs.center_x
             << " / "
@@ -193,12 +198,9 @@ void CameraMonitor::CalculateHull(cv::Mat frame, ContourList &contours,
             << dd
             << endl;
 
-        double angle = (Config.AngleWidth * dd) -
-                (Config.AngleWidth / 2.0);
-        calcs.angle = angle;
-
         cout << "AngleWidth=" << Config.AngleWidth << endl;
         cout << "angle=" << angle << endl;
+#endif
 
         //TODO calculate the height - distance to target
     }

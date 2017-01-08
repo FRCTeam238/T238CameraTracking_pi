@@ -100,8 +100,8 @@ class ContourBuilder
             ContourList contours;
             std::vector<cv::Vec4i> notused; // contours;
 
-            std::cout << mat.size() << std::endl;
-            std::cout << mat.type() << std::endl;
+            //std::cout << mat.size() << std::endl;
+            //std::cout << mat.type() << std::endl;
 
             cv::findContours(mat, contours, notused, mMode, mMethod,
                     cv::Point(0,0));
@@ -158,6 +158,7 @@ class TargetProcessor
         }
 
     private:
+        ContourList mContours;
         ContourList mHull;
 
         int mBlurIndex;

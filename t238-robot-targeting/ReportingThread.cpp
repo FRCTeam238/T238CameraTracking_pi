@@ -103,7 +103,7 @@ static bool SendCameraData(int sockfd)
     if (result == sizeof(sCameraData))
     {
         retval = true;
-        cout << "Sent: " << result << endl;
+        //cout << "Sent: " << result << endl;
     }
     else
     {
@@ -133,8 +133,8 @@ static int OpenCommunicationsSocket()
 	hints.ai_socktype = SOCK_DGRAM;
 
     int addrerr = getaddrinfo(
-            Config.RobotIPAddress.c_str(),
-            Config.RobotPort.c_str(),
+            Config.RB_IPAddress,
+            Config.RB_Port,
             &hints,
             &res);
     if (addrerr != 0)
@@ -165,7 +165,9 @@ static int OpenCommunicationsSocket()
 	// connect it to the address and port we passed in to getaddrinfo():
 
     cout << "Connecting" << endl;
-    cout << "  Target: " << Config.RobotIPAddress.c_str() << ":" << Config.RobotPort.c_str() << endl;
+    cout << "  Target: "
+        << Config.RB_IPAddress << ":"
+        << Config.RB_Port << endl;
     cout << "  Data Package Size: " << sizeof(CameraData) << endl;
     errno = 0;
 	int rr = connect(sockfd, res->ai_addr, res->ai_addrlen);

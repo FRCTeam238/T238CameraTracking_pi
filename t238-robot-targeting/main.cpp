@@ -38,6 +38,9 @@ static void print_help()
     cout << "-s        (DBG) Show camera image window" << endl;
     cout << "-r IP     Set robot IP address" << endl;
     cout << "-p PORT   Set robot port number" << endl;
+    cout << "-De       (DBG)Enable/disable debug channel" << endl;
+    cout << "-Dr IP    (DBG)Set debug channel IP address" << endl;
+    cout << "-Dp PORT  (DBG)Set debug channel port" << endl;
 }
 
 void parse_options(int argc, char *argv[])
@@ -64,13 +67,34 @@ void parse_options(int argc, char *argv[])
         else if (strcmp(argv[argi], "-r") == 0)
         {
             argi++;
-            Config.RobotIPAddress = argv[argi];
+            strncpy(Config.RB_IPAddress, argv[argi],
+                sizeof(Config.RB_IPAddress));
             argi++;
         }
         else if (strcmp(argv[argi], "-p") == 0)
         {
             argi++;
-            Config.RobotPort = argv[argi];
+            strncpy(Config.RB_Port, argv[argi],
+                sizeof(Config.RB_Port));
+            argi++;
+        }
+        else if (strcmp(argv[argi], "-De") == 0)
+        {
+            Config.DC_Enable = !Config.DC_Enable;
+            argi++;
+        }
+        else if (strcmp(argv[argi], "-Dr") == 0)
+        {
+            argi++;
+            strncpy(Config.DC_IPAddress, argv[argi],
+                sizeof(Config.DC_IPAddress));
+            argi++;
+        }
+        else if (strcmp(argv[argi], "-Dp") == 0)
+        {
+            argi++;
+            strncpy(Config.DC_Port, argv[argi],
+                sizeof(Config.DC_Port));
             argi++;
         }
         else if (strcmp(argv[argi], "-h") == 0)
