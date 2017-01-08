@@ -8,6 +8,8 @@
 #define DEFAULT_DC_PORT "2017"
 #define DEFAULT_DC_IP   "localhost"
 
+#define DEFAULT_SI_FILENAME ""
+
 Configuration Config;
 
 void ConfigurationInitialize()
@@ -24,5 +26,8 @@ void ConfigurationInitialize()
     Config.DC_Enable = false;
     strcpy(Config.DC_Port, DEFAULT_DC_PORT);
     strcpy(Config.DC_IPAddress, DEFAULT_DC_IP);
+
+    Config.SI_Enable = false;
+    strcpy(Config.SI_Filename, DEFAULT_SI_FILENAME);
 }
 

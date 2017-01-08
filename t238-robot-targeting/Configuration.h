@@ -22,6 +22,9 @@ struct Configuration
     char DC_Port[256];
     char DC_IPAddress[256];
 
+    bool SI_Enable;
+    char SI_Filename[256];
+
     // show the debug information
     DebugModeSetting DebugMode;
     bool ShowDebugFrameWindow;

@@ -38,9 +38,11 @@ static void print_help()
     cout << "-s        (DBG) Show camera image window" << endl;
     cout << "-r IP     Set robot IP address" << endl;
     cout << "-p PORT   Set robot port number" << endl;
-    cout << "-De       (DBG)Enable/disable debug channel" << endl;
+    cout << "-De       (DBG)Toggle debug channel" << endl;
     cout << "-Dr IP    (DBG)Set debug channel IP address" << endl;
     cout << "-Dp PORT  (DBG)Set debug channel port" << endl;
+    cout << "-SIe      (DBG)Toggle static image (instead of camera)" << endl;
+    cout << "-SIf      (DBG)Filename of static image" << endl;
 }
 
 void parse_options(int argc, char *argv[])
@@ -97,9 +99,22 @@ void parse_options(int argc, char *argv[])
                 sizeof(Config.DC_Port));
             argi++;
         }
+        else if (strcmp(argv[argi], "-SIe") == 0)
+        {
+            Config.SI_Enable = !Config.SI_Enable;
+            argi++;
+        }
+        else if (strcmp(argv[argi], "-SIf") == 0)
+        {
+            argi++;
+            strncpy(Config.SI_Filename, argv[argi],
+                sizeof(Config.SI_Filename));
+            argi++;
+        }
         else if (strcmp(argv[argi], "-h") == 0)
         {
             print_help();
+            exit(EXIT_SUCCESS);
             argi++;
         }
         else

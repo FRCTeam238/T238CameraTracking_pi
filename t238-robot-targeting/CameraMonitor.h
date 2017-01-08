@@ -54,6 +54,8 @@ class CameraMonitor
             double distance;
         };
 
+        bool ReadFrame(cv::Mat &frame);
+
         static void DrawHull(cv::Mat frame, ContourList &contours,
                 FrameCalculations &calcs);
         static void GetRangeOfContour(std::vector<cv::Point> &contour,

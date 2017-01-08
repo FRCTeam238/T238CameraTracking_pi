@@ -6,10 +6,11 @@
 
 using std::cout;
 using std::endl;
+using namespace cv;
 
 CameraMonitor::CameraMonitor()
     : mTarget(CV_RGB2HSV_FULL, 7,
-            cv::Scalar(30, 50, 216), cv::Scalar(60, 238, 238))
+            Scalar(30, 50, 216), Scalar(60, 238, 238))
 {
     // do nothing
 }
@@ -50,7 +51,11 @@ void CameraMonitor::InitializeCamera()
 {
     try
     {
-        if (!mCamera.open(0))
+        if (Config.SI_Enable)
+        {
+            cout << "Camera image in use: " << Config.SI_Filename << endl;
+        }
+        else if (!mCamera.open(0))
         {
             cout << "mCamera.open failure: Failed to open the camera" << endl;
             exit(EXIT_FAILURE);
@@ -64,11 +69,39 @@ void CameraMonitor::InitializeCamera()
     }
 }
 
-cv::Mat CameraMonitor::NextFrame()
+bool CameraMonitor::ReadFrame(Mat &frame)
 {
-    cv::Mat frame;
+    bool retval = false;
 
-    if (!mCamera.read(frame))
+    if (Config.SI_Enable)
+    {
+        frame = imread(Config.SI_Filename, CV_LOAD_IMAGE_COLOR);
+        if (!frame.data)
+        {
+            cout << "Error: Failed to load image"
+                << Config.SI_Filename 
+                << endl;
+            retval = false;
+        }
+        else
+        {
+            retval = true;
+        }
+    }
+    else
+    {
+        retval = mCamera.read(frame);
+    }
+
+    return retval;
+}
+
+Mat CameraMonitor::NextFrame()
+{
+    Mat frame;
+
+    //if (!mCamera.read(frame))
+    if (ReadFrame(frame))
     {
         // no able to read a frame, break out now
         //TODO throw an exception?
@@ -85,7 +118,7 @@ cv::Mat CameraMonitor::NextFrame()
         {
             DrawHull(frame, mHull, calcs);
             imshow("edges", frame);
-            cv::waitKey(30);
+            waitKey(30);
         }
         else
         {
@@ -138,7 +171,7 @@ cv::Mat CameraMonitor::NextFrame()
 }
 
 
-void CameraMonitor::CalculateHull(cv::Mat frame, ContourList &contours,
+void CameraMonitor::CalculateHull(Mat frame, ContourList &contours,
         FrameCalculations &calcs)
 {
     memset(&calcs, 0, sizeof(calcs));
@@ -146,7 +179,7 @@ void CameraMonitor::CalculateHull(cv::Mat frame, ContourList &contours,
 
     for (size_t index = 0; index < contours.size(); index++)
     {
-        std::vector<cv::Point> &contour = contours[index];
+        std::vector<Point> &contour = contours[index];
 
         int range_x1, range_y1;
         int range_x2, range_y2;
@@ -206,7 +239,7 @@ void CameraMonitor::CalculateHull(cv::Mat frame, ContourList &contours,
     }
 }
 
-void CameraMonitor::DrawHull(cv::Mat frame, ContourList &contours,
+void CameraMonitor::DrawHull(Mat frame, ContourList &contours,
         FrameCalculations &calcs)
 {
     CalculateHull(frame, contours, calcs);
@@ -214,15 +247,15 @@ void CameraMonitor::DrawHull(cv::Mat frame, ContourList &contours,
     if (calcs.max_contour >= 0)
     {
         rectangle(frame,
-            cv::Point(calcs.s_range_x1, calcs.s_range_y1),
-            cv::Point(calcs.s_range_x2, calcs.s_range_y2),
-            cv::Scalar(0,0,255));
+            Point(calcs.s_range_x1, calcs.s_range_y1),
+            Point(calcs.s_range_x2, calcs.s_range_y2),
+            Scalar(0,0,255));
         //cout << s_range_x1 << " " << s_range_y1 << endl;
         //cout << s_range_x2 << " " << s_range_y2 << endl;
     }
 }
 
-void CameraMonitor::GetRangeOfContour(std::vector<cv::Point> &contour,
+void CameraMonitor::GetRangeOfContour(std::vector<Point> &contour,
     int &range_x1, int &range_y1, int &range_x2, int &range_y2)
 {
     int min_x = 10000;
@@ -232,7 +265,7 @@ void CameraMonitor::GetRangeOfContour(std::vector<cv::Point> &contour,
 
     for (size_t index = 0; index < contour.size(); index++)
     {
-        cv::Point &point = contour[index];
+        Point &point = contour[index];
 
         if (point.x < min_x)
         {
