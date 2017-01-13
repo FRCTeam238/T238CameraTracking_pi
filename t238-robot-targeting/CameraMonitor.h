@@ -56,11 +56,16 @@ class CameraMonitor
 
         bool ReadFrame(cv::Mat &frame);
 
-        static void DrawHull(cv::Mat frame, ContourList &contours,
-                FrameCalculations &calcs);
-        static void GetRangeOfContour(std::vector<cv::Point> &contour,
+        static void DrawAllHull(cv::Mat frame, const ContourList &contours,
+            bool isHull);
+        static void DrawHull(cv::Mat frame, const ContourList &contours,
+                FrameCalculations &calcs, bool isHull);
+        static void GetRangeOfContour(const std::vector<cv::Point> &contour,
                 int &range_x1, int &range_y1, int &range_x2, int &range_y2);
-        static void CalculateHull(cv::Mat frame, ContourList &contours,
+        static void CalculateHull(cv::Mat frame, const ContourList &contours,
+                FrameCalculations &calcs);
+        static void DrawHullRectangles(cv::Mat frame,
+                const ContourList &contours,
                 FrameCalculations &calcs);
 
         CameraSettings mSettings;

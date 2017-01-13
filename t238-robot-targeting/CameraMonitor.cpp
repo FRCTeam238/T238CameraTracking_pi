@@ -26,6 +26,15 @@ CameraMonitor::~CameraMonitor()
 void CameraMonitor::InitializeSettings()
 {
     memset(&mSettings, 0, sizeof(mSettings));
+#if 1
+    mSettings.LowerHue = 30;
+    mSettings.UpperHue = 80;
+    mSettings.LowerSaturation = 56;
+    mSettings.UpperSaturation = 238;
+    mSettings.LowerValue = 200;
+    mSettings.UpperValue = 237;
+    mSettings.BlurIndex = 7;
+#else
     mSettings.LowerHue = 30;
     mSettings.UpperHue = 60;
     mSettings.LowerSaturation = 56;
@@ -33,6 +42,7 @@ void CameraMonitor::InitializeSettings()
     mSettings.LowerValue = 216;
     mSettings.UpperValue = 237;
     mSettings.BlurIndex = 7;
+#endif
 
     mColorMode = CV_RGB2HSV_FULL;
 
@@ -85,6 +95,10 @@ bool CameraMonitor::ReadFrame(Mat &frame)
         }
         else
         {
+            rectangle(frame,
+                Point(100,200),
+                Point(200,400),
+                Scalar(40, 150, 240), CV_FILLED);
             retval = true;
         }
     }
@@ -101,7 +115,7 @@ Mat CameraMonitor::NextFrame()
     Mat frame;
 
     //if (!mCamera.read(frame))
-    if (ReadFrame(frame))
+    if (!ReadFrame(frame))
     {
         // no able to read a frame, break out now
         //TODO throw an exception?
@@ -116,7 +130,9 @@ Mat CameraMonitor::NextFrame()
 
         if (Config.ShowDebugFrameWindow)
         {
-            DrawHull(frame, mHull, calcs);
+            //DrawHull(frame, mTarget.GetContours(), calcs, false);
+            DrawHull(frame, mHull, calcs, true);
+            DrawHullRectangles(frame, mHull, calcs);
             imshow("edges", frame);
             waitKey(30);
         }
@@ -171,7 +187,7 @@ Mat CameraMonitor::NextFrame()
 }
 
 
-void CameraMonitor::CalculateHull(Mat frame, ContourList &contours,
+void CameraMonitor::CalculateHull(Mat frame, const ContourList &contours,
         FrameCalculations &calcs)
 {
     memset(&calcs, 0, sizeof(calcs));
@@ -179,7 +195,7 @@ void CameraMonitor::CalculateHull(Mat frame, ContourList &contours,
 
     for (size_t index = 0; index < contours.size(); index++)
     {
-        std::vector<Point> &contour = contours[index];
+        const std::vector<Point> &contour = contours[index];
 
         int range_x1, range_y1;
         int range_x2, range_y2;
@@ -239,8 +255,94 @@ void CameraMonitor::CalculateHull(Mat frame, ContourList &contours,
     }
 }
 
-void CameraMonitor::DrawHull(Mat frame, ContourList &contours,
-        FrameCalculations &calcs)
+static Scalar ss[4] =
+{
+    Scalar(0, 0, 128),
+    Scalar(128, 0, 0),
+    Scalar(25, 25, 25),
+    Scalar(128, 128, 0)
+};
+
+using std::vector;
+
+void CameraMonitor::DrawAllHull(Mat frame, const ContourList &contours,
+        bool isHull)
+{
+    for (size_t contourIndex = 0; contourIndex < contours.size(); 
+        contourIndex++)
+    {
+        int colorIndex = contourIndex % 4;
+        vector<cv::Point> contour = contours[contourIndex];
+
+        for (size_t pointInContour = 0; pointInContour < contour.size();
+            pointInContour++)
+        {
+            cv::Point point = contour[pointInContour];
+
+            if (isHull)
+            {
+                rectangle(frame,
+                    point - Point(1,2),
+                    point + Point(1,2),
+                    ss[colorIndex],
+                    CV_FILLED
+                );
+            }
+            else
+            {
+                rectangle(frame,
+                    point - Point(2,1),
+                    point + Point(2,1),
+                    ss[colorIndex],
+                    CV_FILLED
+                );
+            }
+        }
+    }
+
+#if 1
+    static size_t last_hull_count = 50000000;
+    if (last_hull_count != contours.size())
+    {
+        last_hull_count = contours.size();
+        cout << "hull count=" << contours.size() << endl;
+    }
+#endif
+}
+
+void CameraMonitor::DrawHull(cv::Mat frame, const ContourList &contours,
+        FrameCalculations &calcs, bool isHull)
+{
+    if (Config.DB_DrawAllHull)
+    {
+        DrawAllHull(frame, contours, isHull);
+    }
+    else
+    {
+#if 1
+        DrawHullRectangles(frame, contours, calcs);
+#else
+        CalculateHull(frame, contours, calcs);
+
+        if (calcs.max_contour >= 0)
+        {
+            rectangle(frame,
+                Point(calcs.s_range_x1, calcs.s_range_y1),
+                Point(calcs.s_range_x2, calcs.s_range_y2),
+                Scalar(0,255,255));
+            //cout << calcs.s_range_x1 << " " << calcs.s_range_y1 << endl;
+            //cout << calcs.s_range_x2 << " " << calcs.s_range_y2 << endl;
+        }
+        else
+        {
+            cout << "No contours" << endl;
+        }
+#endif
+    }
+}
+
+void CameraMonitor::DrawHullRectangles(Mat frame,
+    const ContourList &contours, FrameCalculations &calcs)
 {
     CalculateHull(frame, contours, calcs);
 
@@ -249,13 +351,17 @@ void CameraMonitor::DrawHull(Mat frame, ContourList &contours,
         rectangle(frame,
             Point(calcs.s_range_x1, calcs.s_range_y1),
             Point(calcs.s_range_x2, calcs.s_range_y2),
-            Scalar(0,0,255));
-        //cout << s_range_x1 << " " << s_range_y1 << endl;
-        //cout << s_range_x2 << " " << s_range_y2 << endl;
+            Scalar(0, 128, 255), 2);
+        //cout << calcs.s_range_x1 << " " << calcs.s_range_y1 << endl;
+        //cout << calcs.s_range_x2 << " " << calcs.s_range_y2 << endl;
+    }
+    else
+    {
+        cout << "No contours" << endl;
     }
 }
 
-void CameraMonitor::GetRangeOfContour(std::vector<Point> &contour,
+void CameraMonitor::GetRangeOfContour(const std::vector<Point> &contour,
     int &range_x1, int &range_y1, int &range_x2, int &range_y2)
 {
     int min_x = 10000;
@@ -265,7 +371,7 @@ void CameraMonitor::GetRangeOfContour(std::vector<Point> &contour,
 
     for (size_t index = 0; index < contour.size(); index++)
     {
-        Point &point = contour[index];
+        const Point &point = contour[index];
 
         if (point.x < min_x)
         {

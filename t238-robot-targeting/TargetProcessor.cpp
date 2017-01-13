@@ -2,6 +2,8 @@
 //#include "ReportingThread.h"
 #include "Configuration.h"
 
+using namespace cv;
+
 #if 1
 TargetProcessor::TargetProcessor(int colorMode, int blurIndex,
     cv::Scalar threshLow, cv::Scalar threshHigh)
@@ -76,7 +78,11 @@ void TargetProcessor::Initialize(int colorMode,
         int lowerValue, int upperValue,
         int blurIndex)
 {
-    // TODO
+    convertColor.SetColorSpace(colorMode);
+    threshold.SetRange(
+        Scalar(lowerHue, lowerSaturation, lowerValue),
+        Scalar(upperHue, upperSaturation, upperValue));
+    blur.SetBlur(blurIndex);
 }
 
 

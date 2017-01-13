@@ -109,8 +109,9 @@ static bool SendCameraData(int sockfd)
     {
         const char *errorMsg = strerror(errno);
 
-        cout << "Error: " << __FILE__ << ":" << __LINE__ << 
-            " " << errorMsg << " - Failed to send" << endl;
+        cout << "Error: " << __FILE__ << ":" << __LINE__
+            << " " << errorMsg << " - Failed to send: result="
+            << result << endl;
 
     }
 
@@ -145,6 +146,8 @@ static int OpenCommunicationsSocket()
     else
     {
         cout << "getaddrinfo success: " << "No error" << endl;
+        cout << "addr: " << Config.RB_IPAddress << endl;
+        cout << "port: " << Config.RB_Port << endl;
     }
 
 	// make a socket:

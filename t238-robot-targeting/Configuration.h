@@ -13,6 +13,8 @@ struct Configuration
 {
     double AngleWidth;
 
+    bool RP_Enable;
+
     // robot port
     char RB_Port[256];
     char RB_IPAddress[256];
@@ -28,6 +30,8 @@ struct Configuration
     // show the debug information
     DebugModeSetting DebugMode;
     bool ShowDebugFrameWindow;
+
+    bool DB_DrawAllHull;
 
 };
 

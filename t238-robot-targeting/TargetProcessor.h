@@ -30,6 +30,11 @@ class ConvertColor
             return retval;
         }
 
+        void SetColorSpace(int colorSpace)
+        {
+            mTargetColorSpace = colorSpace;
+        }
+
     private:
         int mTargetColorSpace;
 
@@ -55,6 +60,11 @@ class Blur
             return retval;
         }
 
+        void SetBlur(int blurIndex)
+        {
+            mBlurIndex = blurIndex;
+        }
+
     private:
         int mBlurIndex;
 };
@@ -77,8 +87,16 @@ class FilterColorThreshold
         {
             cv::Mat retval;
 
+            //imshow("thresh1", frame);
             cv::inRange(frame, mRangeLower, mRangeUpper, retval);
+            //imshow("thresh2", frame);
             return retval;
+        }
+
+        void SetRange(cv::Scalar lower, cv::Scalar upper)
+        {
+            mRangeLower = lower;
+            mRangeUpper = upper;
         }
 
     private:
@@ -155,6 +173,11 @@ class TargetProcessor
         const ContourList &GetHull() const
         {
             return mHull;
+        }
+
+        const ContourList &GetContours() const
+        {
+            return mContours;
         }
 
     private:

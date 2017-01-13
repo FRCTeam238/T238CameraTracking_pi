@@ -33,9 +33,7 @@ void camera_monitor_iteration()
 
 static void print_help()
 {
-    cout << "-d0       Normal operating mode" << endl;
-    cout << "-d1       (DBG) Send rolling numbers to robot" << endl;
-    cout << "-s        (DBG) Show camera image window" << endl;
+    cout << "-RPe      Toggle reporting thread" << endl;
     cout << "-r IP     Set robot IP address" << endl;
     cout << "-p PORT   Set robot port number" << endl;
     cout << "-De       (DBG)Toggle debug channel" << endl;
@@ -43,6 +41,9 @@ static void print_help()
     cout << "-Dp PORT  (DBG)Set debug channel port" << endl;
     cout << "-SIe      (DBG)Toggle static image (instead of camera)" << endl;
     cout << "-SIf      (DBG)Filename of static image" << endl;
+    cout << "-d0       Normal operating mode" << endl;
+    cout << "-d1       (DBG) Send rolling numbers to robot" << endl;
+    cout << "-s        (DBG) Show camera image window" << endl;
 }
 
 void parse_options(int argc, char *argv[])
@@ -111,6 +112,11 @@ void parse_options(int argc, char *argv[])
                 sizeof(Config.SI_Filename));
             argi++;
         }
+        else if (strcmp(argv[argi], "-RPe") == 0)
+        {
+            Config.RP_Enable = !Config.RP_Enable;
+            argi++;
+        }
         else if (strcmp(argv[argi], "-h") == 0)
         {
             print_help();
@@ -146,19 +152,31 @@ int main(int argc, char *argv[])
     try {
         bool done = false;
 
+        cout << "INFO: Initializing camera" << endl;
+
         /* begin:init start the various threads */
         camera_monitor_initialize();
 
-        start_reporting_thread(); // initialize & start sending camera data
+        if (Config.RP_Enable)
+        {
+            start_reporting_thread(); // initialize & start sending camera data
+        }
+        else
+        {
+            cout << "INFO: Camera thread disabled" << endl;
+        }
+
         //start_command_thread();   // TODO receive command from robot
 
         /* end:init */
 
         /* begin:main camera loop */
+        cout << "INFO: Starting camera loop" << endl;
         for (done = false; !done; )
         {
             usleep(300);
             camera_monitor_iteration();
+            fflush(stdout);
         }
         /* end:init */
     }
