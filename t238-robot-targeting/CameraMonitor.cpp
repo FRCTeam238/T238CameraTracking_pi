@@ -31,7 +31,7 @@ void CameraMonitor::InitializeSettings()
     mSettings.UpperHue = 80;
     mSettings.LowerSaturation = 56;
     mSettings.UpperSaturation = 238;
-    mSettings.LowerValue = 200;
+    mSettings.LowerValue = 150;
     mSettings.UpperValue = 237;
     mSettings.BlurIndex = 7;
 #else
