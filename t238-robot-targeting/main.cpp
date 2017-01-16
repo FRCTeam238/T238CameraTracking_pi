@@ -25,12 +25,6 @@ void camera_monitor_initialize()
     sMonitor.InitializeCamera();
 }
 
-void camera_monitor_iteration()
-{
-    cv::Mat frame = sMonitor.NextFrame();
-    //cv::imshow("test", frame);
-}
-
 static void print_help()
 {
     cout << "-RPe      Toggle reporting thread" << endl;
@@ -175,7 +169,7 @@ int main(int argc, char *argv[])
         for (done = false; !done; )
         {
             usleep(300);
-            camera_monitor_iteration();
+            cv::Mat frame = sMonitor.NextFrame();
             fflush(stdout);
         }
         /* end:init */
