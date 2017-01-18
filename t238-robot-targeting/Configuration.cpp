@@ -2,8 +2,8 @@
 
 #include <cstring>
 
-#define DEFAULT_RB_PORT "2238"
-#define DEFAULT_RB_IP   "localhost"
+#define DEFAULT_RB_PORT "5800"
+#define DEFAULT_RB_IP   "10.2.38.2"
 
 #define DEFAULT_DC_PORT "2017"
 #define DEFAULT_DC_IP   "localhost"

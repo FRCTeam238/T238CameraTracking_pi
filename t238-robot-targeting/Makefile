@@ -2,9 +2,7 @@
 CXXFLAGS = -Wall -Werror -g `pkg-config --cflags opencv` --std=c++11
 LIBS = `pkg-config --libs opencv` -lpthread
 
-OBJS = main.o \
-	   CameraMonitor.o CameraMonitorDebug.o \
-	   TargetProcessor.o \
+OBJS = main.o CameraMonitor.o TargetProcessor.o \
 	   ReportingThread.o Configuration.o
 EXE = t238-targeting
 
@@ -15,7 +13,7 @@ t238-targeting : $(OBJS)
 	$(CXX) -o $@ $^ $(LIBS)
 
 main.o: main.cpp ReportingThread.h CameraMonitor.h TargetProcessor.h \
- Configuration.h
+    Configuration.h
 	$(CXX) -c $< $(CXXFLAGS) -o $@
 
 ReportingThread.o: ReportingThread.cpp ReportingThread.h Configuration.h
@@ -23,10 +21,6 @@ ReportingThread.o: ReportingThread.cpp ReportingThread.h Configuration.h
 
 CameraMonitor.o: CameraMonitor.cpp Configuration.h CameraMonitor.h \
     TargetProcessor.h ReportingThread.h
-	$(CXX) -c $< $(CXXFLAGS) -o $@
-
-CameraMonitorDebug.o: CameraMonitorDebug.cpp Configuration.h \
-	 CameraMonitor.h TargetProcessor.h 
 	$(CXX) -c $< $(CXXFLAGS) -o $@
 
 TargetProcessor.o: TargetProcessor.cpp TargetProcessor.h Configuration.h
@@ -38,7 +32,6 @@ Configuration.o: Configuration.cpp Configuration.h
 .PHONY: deps
 deps :
 	$(CXX) $(CXXFLAGS) -MM main.cpp ReportingThread.cpp CameraMonitor.cpp \
-		CameraMonitorDebug.cpp \
         TargetProcessor.cpp Configuration.cpp
 
 .PHONY: clean

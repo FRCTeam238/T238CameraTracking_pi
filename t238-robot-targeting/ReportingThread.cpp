@@ -124,14 +124,14 @@ static bool SendCameraData(int sockfd)
  */
 static int OpenCommunicationsSocket()
 {
-	struct addrinfo hints, *res;
-	int sockfd;
+    struct addrinfo hints, *res;
+    int sockfd;
 
-	// first, load up address structs with getaddrinfo():
+    // first, load up address structs with getaddrinfo():
 
-	memset(&hints, 0, sizeof hints);
-	hints.ai_family = AF_UNSPEC;  // use IPv4 or IPv6, whichever
-	hints.ai_socktype = SOCK_DGRAM;
+    memset(&hints, 0, sizeof hints);
+    hints.ai_family = AF_UNSPEC;  // use IPv4 or IPv6, whichever
+    hints.ai_socktype = SOCK_DGRAM;
 
     int addrerr = getaddrinfo(
             Config.RB_IPAddress,
@@ -150,10 +150,10 @@ static int OpenCommunicationsSocket()
         cout << "port: " << Config.RB_Port << endl;
     }
 
-	// make a socket:
+    // make a socket:
 
     errno = 0;
-	sockfd = socket(res->ai_family, res->ai_socktype, res->ai_protocol);
+    sockfd = socket(res->ai_family, res->ai_socktype, res->ai_protocol);
     if (sockfd < 0)
     {
         int err = errno;
@@ -165,7 +165,7 @@ static int OpenCommunicationsSocket()
         cout << "socket success: " << sockfd << endl;
     }
 
-	// connect it to the address and port we passed in to getaddrinfo():
+    // connect it to the address and port we passed in to getaddrinfo():
 
     cout << "Connecting" << endl;
     cout << "  Target: "
@@ -173,7 +173,7 @@ static int OpenCommunicationsSocket()
         << Config.RB_Port << endl;
     cout << "  Data Package Size: " << sizeof(CameraData) << endl;
     errno = 0;
-	int rr = connect(sockfd, res->ai_addr, res->ai_addrlen);
+    int rr = connect(sockfd, res->ai_addr, res->ai_addrlen);
     if (rr < 0)
     {
         int err = errno;
@@ -186,7 +186,7 @@ static int OpenCommunicationsSocket()
         cout << "connect success: " << strerror(err) << endl;
     }
 
-	return sockfd;
+    return sockfd;
 }
 
 /** Main loop for the Camera to Client device communications thread.
