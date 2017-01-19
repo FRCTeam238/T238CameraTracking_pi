@@ -3,9 +3,11 @@
 #include "Configuration.h"
 #include "CameraMonitor.h"
 #include "ReportingThread.h"
+#include "Logging.h"
 
 using std::cout;
 using std::endl;
+using std::string;
 using namespace cv;
 
 CameraMonitor::CameraMonitor()
@@ -57,26 +59,37 @@ void CameraMonitor::InitializeSettings()
             mSettings.BlurIndex);
 }
 
-void CameraMonitor::InitializeCamera()
+bool CameraMonitor::InitializeCamera()
 {
+    bool retval = false;
     try
     {
         if (Config.SI_Enable)
         {
-            cout << "Camera image in use: " << Config.SI_Filename << endl;
+            string msg = "";
+            msg += string("camera image override:filename=") +
+                Config.SI_Filename;
+
+            log_info(__FILE__, __LINE__, msg.c_str());
+            retval = true;
         }
         else if (!mCamera.open(0))
         {
-            cout << "mCamera.open failure: Failed to open the camera" << endl;
-            exit(EXIT_FAILURE);
+            log_error_msg(__FILE__, __LINE__,
+                    "camera failed to open", -1, NULL);
+        }
+        else
+        {
+            retval = true;
         }
     }
     catch(cv::Exception &e)
     {
         const char *err = e.what();
-        cout << "error mCamera.open failed: " << err << endl;
-        exit(EXIT_FAILURE);
+        log_error_msg(__FILE__, __LINE__, "camera open failure", -1, err);
     }
+
+    return retval;
 }
 
 bool CameraMonitor::ReadFrame(Mat &frame)
@@ -192,6 +205,7 @@ Mat CameraMonitor::NextFrame()
 
     return frame;
 }
+
 
 
 void CameraMonitor::CalculateHull(Mat frame, const ContourList &contours,
@@ -317,25 +331,7 @@ void CameraMonitor::DrawHull(cv::Mat frame, const ContourList &contours,
     }
     else
     {
-#if 1
         DrawHullRectangles(frame, contours, calcs);
-#else
-        CalculateHull(frame, contours, calcs);
-
-        if (calcs.max_contour >= 0)
-        {
-            rectangle(frame,
-                Point(calcs.s_range_x1, calcs.s_range_y1),
-                Point(calcs.s_range_x2, calcs.s_range_y2),
-                Scalar(0,255,255));
-            //cout << calcs.s_range_x1 << " " << calcs.s_range_y1 << endl;
-            //cout << calcs.s_range_x2 << " " << calcs.s_range_y2 << endl;
-        }
-        else
-        {
-            cout << "No contours" << endl;
-        }
-#endif
     }
 }
 
@@ -350,8 +346,6 @@ void CameraMonitor::DrawHullRectangles(Mat frame,
             Point(calcs.s_range_x1, calcs.s_range_y1),
             Point(calcs.s_range_x2, calcs.s_range_y2),
             Scalar(0, 128, 255), 2);
-        //cout << calcs.s_range_x1 << " " << calcs.s_range_y1 << endl;
-        //cout << calcs.s_range_x2 << " " << calcs.s_range_y2 << endl;
     }
     else
     {
@@ -390,11 +384,7 @@ void CameraMonitor::GetRangeOfContour(const std::vector<Point> &contour,
         {
             max_y = point.y;
         }
-
-        //cout << point << endl;
     }
-
-    //cout << "======" << endl;
 
     range_x1 = min_x;
     range_y1 = min_y;

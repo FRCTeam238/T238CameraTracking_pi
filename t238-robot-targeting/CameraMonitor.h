@@ -24,7 +24,7 @@ class CameraMonitor
         ~CameraMonitor();
 
         void InitializeSettings();
-        void InitializeCamera();
+        bool  InitializeCamera();
 
         bool IsReady() const
         {

@@ -6,6 +6,7 @@
 #include "ReportingThread.h"
 #include "CameraMonitor.h"
 #include "Configuration.h"
+#include "Logging.h"
 
 using std::cout;
 using std::endl;
@@ -22,7 +23,10 @@ void camera_monitor_initialize()
     // TODO load settings from an external file
     sMonitor.InitializeSettings();
 
-    sMonitor.InitializeCamera();
+    if (!sMonitor.InitializeCamera())
+    {
+        exit(EXIT_FAILURE);
+    }
 }
 
 void camera_monitor_iteration()
@@ -138,11 +142,11 @@ int main(int argc, char *argv[])
 
     if (Config.DebugMode == DM_Normal)
     {
-        cout << "Mode: Normal" << endl;
+        log_info(__FILE__, __LINE__, "mode=normal");
     }
     else if (Config.DebugMode == DM_RotatingNumbers)
     {
-        cout << "Mode: Rotating Numbers" << endl;
+        log_info(__FILE__, __LINE__, "mode=rotating-numbers");
     }
     else
     {
@@ -152,7 +156,7 @@ int main(int argc, char *argv[])
     try {
         bool done = false;
 
-        cout << "INFO: Initializing camera" << endl;
+        log_info(__FILE__, __LINE__, "Initializing camera");
 
         /* begin:init start the various threads */
         camera_monitor_initialize();
@@ -163,7 +167,7 @@ int main(int argc, char *argv[])
         }
         else
         {
-            cout << "INFO: Camera thread disabled" << endl;
+            log_info(__FILE__, __LINE__, "Camera thread disabled in config");
         }
 
         //start_command_thread();   // TODO receive command from robot
@@ -171,7 +175,7 @@ int main(int argc, char *argv[])
         /* end:init */
 
         /* begin:main camera loop */
-        cout << "INFO: Starting camera loop" << endl;
+        log_info(__FILE__, __LINE__, "Start camera loop");
         for (done = false; !done; )
         {
             usleep(300);
@@ -185,7 +189,7 @@ int main(int argc, char *argv[])
     {
         // any subsystem (but not threads) can escape the program
         // by throwing an exception 
-        cout << "exception" << endl;
+        log_info(__FILE__, __LINE__, "Unspecified exception in main");
     }
 
     return 0;

@@ -1,4 +1,3 @@
-#include <iostream>
 #include <cstdio>
 #include <cstdint>
 #include <cstring>
@@ -17,9 +16,6 @@
 #include "ReportingThread.h"
 #include "Configuration.h"
 #include "Logging.h"
-
-using std::cout;
-using std::endl;
 
 /** 
  *
@@ -104,7 +100,6 @@ static bool SendCameraData(int sockfd)
     if (result == sizeof(sCameraData))
     {
         retval = true;
-        //cout << "Sent: " << result << endl;
     }
     else
     {
