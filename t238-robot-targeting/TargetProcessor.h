@@ -1,11 +1,12 @@
 #ifndef TargetProcessor_h
 #define TargetProcessor_h
 
-#include <opencv2/opencv.hpp>
+#include "HullBuilder.h"
+#include "ContourBuilder.h"
 
+#include <opencv2/opencv.hpp>
 #include <vector>
 typedef std::vector<std::vector<cv::Point> > ContourList;
-
 
 class ConvertColor
 {
@@ -102,53 +103,6 @@ class FilterColorThreshold
     private:
         cv::Scalar mRangeLower;
         cv::Scalar mRangeUpper;
-};
-
-class ContourBuilder
-{
-    public:
-        ContourBuilder()
-            : mMode(CV_RETR_TREE), mMethod(CV_CHAIN_APPROX_SIMPLE)
-        {
-            // do nothing
-        }
-
-        ContourList Process(cv::Mat mat)
-        {
-            ContourList contours;
-            std::vector<cv::Vec4i> notused; // contours;
-
-            //std::cout << mat.size() << std::endl;
-            //std::cout << mat.type() << std::endl;
-
-            cv::findContours(mat, contours, notused, mMode, mMethod,
-                    cv::Point(0,0));
-
-            return contours;
-        }
-
-    private:
-        int mMode;
-        int mMethod;
-};
-
-class HullBuilder
-{
-    public:
-        ContourList Process(ContourList &contours)
-        {
-            ContourList hull(contours.size());
-
-            for (size_t index = 0; index < contours.size(); index++)
-            {
-                convexHull(cv::Mat(contours[index]), hull[index], false);
-            }
-
-            return hull;
-        }
-
-    private:
-
 };
 
 class TargetProcessor
