@@ -16,6 +16,7 @@
 
 #include "ReportingThread.h"
 #include "Configuration.h"
+#include "Logging.h"
 
 using std::cout;
 using std::endl;
@@ -107,12 +108,7 @@ static bool SendCameraData(int sockfd)
     }
     else
     {
-        const char *errorMsg = strerror(errno);
-
-        cout << "Error: " << __FILE__ << ":" << __LINE__
-            << " " << errorMsg << " - Failed to send: result="
-            << result << endl;
-
+        log_error(__FILE__, __LINE__, "send", result, errno);
     }
 
     return retval;
@@ -140,14 +136,19 @@ static int OpenCommunicationsSocket()
             &res);
     if (addrerr != 0)
     {
-        cout << "getaddrinfo failed: " << gai_strerror(addrerr) << endl;
-        exit(EXIT_FAILURE);
+
+        log_error_msg(__FILE__, __LINE__, "getaddrinfo",
+                addrerr, gai_strerror(addrerr));
+        sockfd = -1;
     }
     else
     {
-        cout << "getaddrinfo success: " << "No error" << endl;
-        cout << "addr: " << Config.RB_IPAddress << endl;
-        cout << "port: " << Config.RB_Port << endl;
+        std::string msg = "";
+        msg += std::string("getaddrinfo:connected:ip=")
+            + Config.RB_IPAddress 
+            + ",port=" 
+            + Config.RB_Port;
+        log_info(__FILE__, __LINE__, msg.c_str());
     }
 
     // make a socket:
@@ -156,34 +157,24 @@ static int OpenCommunicationsSocket()
     sockfd = socket(res->ai_family, res->ai_socktype, res->ai_protocol);
     if (sockfd < 0)
     {
-        int err = errno;
-        cout << "socket failed: " << strerror(err) << endl;
-        exit(EXIT_FAILURE);
-    }
-    else
-    {
-        cout << "socket success: " << sockfd << endl;
+        int error = errno;
+        log_error(__FILE__, __LINE__, "socket", 0, error);
+        sockfd = -1;
     }
 
     // connect it to the address and port we passed in to getaddrinfo():
 
-    cout << "Connecting" << endl;
-    cout << "  Target: "
-        << Config.RB_IPAddress << ":"
-        << Config.RB_Port << endl;
-    cout << "  Data Package Size: " << sizeof(CameraData) << endl;
-    errno = 0;
-    int rr = connect(sockfd, res->ai_addr, res->ai_addrlen);
-    if (rr < 0)
+    if (sockfd >= 0)
     {
-        int err = errno;
-        cout << "connect failed: " << strerror(err) << endl;
-        exit(EXIT_FAILURE);
-    }
-    else
-    {
-        int err = errno;
-        cout << "connect success: " << strerror(err) << endl;
+        errno = 0;
+        int rr = connect(sockfd, res->ai_addr, res->ai_addrlen);
+        if (rr < 0)
+        {
+            close(sockfd);
+            sockfd = -1;
+            int error = errno;
+            log_error(__FILE__, __LINE__, "connect", 0, error);
+        }
     }
 
     return sockfd;
@@ -227,15 +218,21 @@ static void *ReportThreadEntry(void *)
 {
     memset(&sCameraData, 0, sizeof(sCameraData));
 
-    int sockfd = OpenCommunicationsSocket();
-    if (sockfd == -1)
+    //TODO jump out when we receive a request to terminate
+    for (bool done = false; !done; )
     {
-        cout << "Error: Unable to open socket" << endl;
-    }
-    else
-    {
-        RunCommunicationsLoop(sockfd);
-        close(sockfd);
+        int sockfd = OpenCommunicationsSocket();
+        if (sockfd == -1)
+        {
+            int error = errno;
+            log_error(__FILE__, __LINE__, "socket", 0, error);
+        }
+        else
+        {
+            RunCommunicationsLoop(sockfd);
+            close(sockfd);
+            log_info(__FILE__, __LINE__, "reconnecting");
+        }
     }
 
     return NULL;

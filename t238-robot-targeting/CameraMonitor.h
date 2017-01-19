@@ -52,6 +52,8 @@ class CameraMonitor
 
             double angle;
             double distance;
+
+            bool isGoodData;
         };
 
         bool ReadFrame(cv::Mat &frame);

@@ -153,22 +153,29 @@ Mat CameraMonitor::NextFrame()
 
         if (Config.DebugMode == DM_Normal)
         {
-            double angle_d = calcs.angle;
-            double distance_d = calcs.distance;
-
-            if (angle_d > 60)
+            if (calcs.isGoodData)
             {
-                angle_d = 60.0;
+                double angle_d = calcs.angle;
+                double distance_d = calcs.distance;
+
+                if (angle_d > 60)
+                {
+                    angle_d = 127.0;
+                }
+                else if (angle_d < -60)
+                {
+                    angle_d = 127.0;
+                }
+
+                int angle_i = (int)(angle_d * 2.0);
+                int distance_i = (int)(distance_d);
+
+                UpdateCameraData(angle_i, distance_i, frameCount);
             }
-            else if (angle_d < -60)
+            else
             {
-                angle_d = -60.0;
+                UpdateCameraData(127, 127, frameCount);
             }
-
-            int angle_i = (int)(angle_d * 2.0);
-            int distance_i = (int)(distance_d);
-
-            UpdateCameraData(angle_i, distance_i, frameCount);
         }
         else if (Config.DebugMode == DM_RotatingNumbers)
         {
@@ -191,7 +198,14 @@ void CameraMonitor::CalculateHull(Mat frame, const ContourList &contours,
         FrameCalculations &calcs)
 {
     memset(&calcs, 0, sizeof(calcs));
+    calcs.isGoodData = false;
     calcs.max_contour = -1;
+    calcs.s_range_x1 = 127;
+    calcs.s_range_y1 = 127;
+    calcs.s_range_x2 = 127;
+    calcs.s_range_y2 = 127;
+    calcs.angle = 127;
+    calcs.distance = 127;
 
     for (size_t index = 0; index < contours.size(); index++)
     {
@@ -224,34 +238,18 @@ void CameraMonitor::CalculateHull(Mat frame, const ContourList &contours,
         calcs.center_x = calcs.s_range_x1 + (calcs.max_width / 2);
         calcs.center_y = calcs.s_range_y1 + (calcs.max_height / 2);
 
-        //int screen_center_x = frame.rows / 2;
-        //int screen_center_y = frame.cols / 2;
-
-        //cout << "screen_center_x=" << screen_center_x << endl;
-        //cout << "screen_center_y=" << screen_center_y << endl;
-
-        //cout << "center_x=" << calcs.center_x << endl;
-        //cout << "center_y=" << calcs.center_y << endl;
-
         double dd = ((double)calcs.center_x / (double)frame.size().width);
         double angle = (Config.AngleWidth * dd) -
                 (Config.AngleWidth / 2.0);
         calcs.angle = angle;
-
-#if 0
-        cout << "ap="
-            << calcs.center_x
-            << " / "
-            << frame.size().width
-            << " = "
-            << dd
-            << endl;
-
-        cout << "AngleWidth=" << Config.AngleWidth << endl;
-        cout << "angle=" << angle << endl;
-#endif
-
         //TODO calculate the height - distance to target
+        calcs.isGoodData = true;
+    }
+    else
+    {
+        calcs.isGoodData = false;
+        calcs.angle = 127;
+        calcs.distance = 127;
     }
 }
 
