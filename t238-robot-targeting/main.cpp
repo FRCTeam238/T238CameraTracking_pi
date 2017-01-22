@@ -31,8 +31,16 @@ void camera_monitor_initialize()
 
 void camera_monitor_iteration()
 {
-    cv::Mat frame = sMonitor.NextFrame();
-    //cv::imshow("test", frame);
+    try
+    {
+        cv::Mat frame = sMonitor.NextFrame();
+    }
+    catch (CameraMonitor::CameraFailureException ex)
+    {
+        log_error_msg(__FILE__, __LINE__, "camera_monitor_iteration",
+                -1, ex.what());
+        exit(EXIT_FAILURE);
+    }
 }
 
 static void print_help()

@@ -3,6 +3,7 @@
 
 #include "TargetProcessor.h"
 
+#include <stdexcept>
 #include <opencv2/opencv.hpp>
 #include <vector>
 
@@ -19,6 +20,13 @@ struct CameraSettings
 
 class CameraMonitor
 {
+    public:
+        class CameraFailureException : public std::runtime_error
+        {
+            public:
+                CameraFailureException(const char *what);
+        };
+
     public:
         CameraMonitor();
         ~CameraMonitor();

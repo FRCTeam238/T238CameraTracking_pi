@@ -10,6 +10,12 @@ using std::endl;
 using std::string;
 using namespace cv;
 
+CameraMonitor::CameraFailureException::CameraFailureException(const char *what)
+     : std::runtime_error(what)
+{
+    // do nothing
+}
+
 CameraMonitor::CameraMonitor()
     : mTarget(CV_RGB2HSV_FULL, 7,
             Scalar(30, 50, 216), Scalar(60, 238, 238))
@@ -101,9 +107,9 @@ bool CameraMonitor::ReadFrame(Mat &frame)
         frame = imread(Config.SI_Filename, CV_LOAD_IMAGE_COLOR);
         if (!frame.data)
         {
-            cout << "Error: Failed to load image"
-                << Config.SI_Filename 
-                << endl;
+            string msg = std::string("Failed to load image:filename=") +
+                Config.SI_Filename;
+            log_error_msg(__FILE__, __LINE__, "imread", -1, msg.c_str());
             retval = false;
         }
         else
@@ -127,7 +133,6 @@ Mat CameraMonitor::NextFrame()
 {
     Mat frame;
 
-    //if (!mCamera.read(frame))
     if (!ReadFrame(frame))
     {
         // no able to read a frame, break out now
