@@ -7,6 +7,7 @@
 #include "CameraMonitor.h"
 #include "Configuration.h"
 #include "Logging.h"
+#include "CalibrationThread.h"
 
 using std::cout;
 using std::endl;
@@ -168,6 +169,7 @@ int main(int argc, char *argv[])
 
         /* begin:init start the various threads */
         camera_monitor_initialize();
+        //C calibration_thread_initialize();
 
         if (Config.RP_Enable)
         {
