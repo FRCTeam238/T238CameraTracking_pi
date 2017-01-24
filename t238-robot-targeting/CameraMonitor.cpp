@@ -129,6 +129,178 @@ bool CameraMonitor::ReadFrame(Mat &frame)
     return retval;
 }
 
+#if 1
+
+#if 1
+Rectangle CameraMonitor::GetRangeOfContour(std::vector<cv::Point> contour) const
+{
+    Rectangle rect;
+
+    rect.x1 = INT_MAX;
+    rect.y1 = INT_MAX;
+    rect.x2 = INT_MIN;
+    rect.y2 = INT_MIN;
+
+    for (size_t index = 0; index < contour.size(); index++)
+    {
+        cv::Point pt = contour[index];
+
+        if (pt.x < rect.x1)
+        {
+            rect.x1 = pt.x;
+        }
+
+        if (pt.x > rect.x2)
+        {
+            rect.x2 = pt.x;
+        }
+
+        if (pt.y < rect.y1)
+        {
+            rect.y1 = pt.y;
+        }
+
+        if (pt.y > rect.y2)
+        {
+            rect.y2 = pt.y;
+        }
+    }
+
+    return rect;
+}
+
+RectList CameraMonitor::FindRects(cv::Mat frame, const ContourList &hull) const
+{
+    RectList rectlist;
+
+    for (ContourList::const_iterator it = hull.begin();
+        it != hull.end(); it++)
+    {
+        Rectangle rect = GetRangeOfContour(*it);
+
+        rectlist.push_back(rect);
+    }
+
+    return rectlist;
+}
+
+#else
+
+Rectangle CameraMonitor::GetRangeOfContour(std::vector<cv::Point> contour) const
+{
+    Rectangle rect;
+
+    rect.x1 = INT_MAX;
+    rect.y1 = INT_MAX;
+    rect.x2 = INT_MIN;
+    rect.y2 = INT_MIN;
+
+    for (size_t index = 0; index < contour.size(); index++)
+    {
+        cv::Point pt = contour[index];
+
+        if (pt.x < rect.x1)
+        {
+            rect.x1 = pt.x;
+        }
+
+        if (pt.x > rect.x2)
+        {
+            rect.x2 = pt.x;
+        }
+
+        if (pt.y < rect.y1)
+        {
+            rect.y1 = pt.y;
+        }
+
+        if (pt.y > rect.y2)
+        {
+            rect.y2 = pt.y;
+        }
+    }
+
+    return rect;
+}
+
+RectList CameraMonitor::FindRects(cv::Mat frame, ContourList hull) const
+{
+    RectList rectlist;
+
+    for (size_t index = 0; index < hull.size(); index++)
+    {
+        Rectangle rect = GetRangeOfContour(hull[index]);
+
+        rectlist.push_back(rect);
+    }
+
+    return rectlist;
+}
+#endif
+
+cv::Mat CameraMonitor::DrawRectangles(cv::Mat frame, const RectList &rects) const
+{
+    static Scalar ss[5] =
+    {
+        Scalar(  0,   0, 128),
+        Scalar(  0, 128,   0),
+        Scalar(128,   0,   0),
+        Scalar(128, 128,   0),
+        Scalar(  0, 128, 128)
+    };
+
+
+    for (size_t index = 0; index < rects.size(); index++)
+    {
+        const Rectangle &rect = rects[index];
+        Point tl =
+        {
+            rect.x1,
+            rect.y1
+        };
+
+        Point br =
+        {
+            rect.x2,
+            rect.y2
+        };
+
+        size_t colorIndex = index % (sizeof(ss) / sizeof(ss[0]));
+
+        rectangle(frame,
+            tl,
+            br,
+            ss[colorIndex]);
+    }
+
+    return frame;
+}
+
+Mat CameraMonitor::NextFrame()
+{
+    Mat frame;
+
+    if (!ReadFrame(frame))
+    {
+        log_error_msg(__FILE__, __LINE__, "NextFrame",
+            -1, "Failed to read frame");
+    }
+    else
+    {
+        mTarget.Process(frame);
+        mHull = mTarget.GetHull();
+
+        RectList rects = FindRects(frame, mHull);
+
+        frame = DrawRectangles(frame, rects);
+        imshow("edges", frame);
+        waitKey(30);
+    }
+
+    return frame;
+}
+
+#else
 Mat CameraMonitor::NextFrame()
 {
     Mat frame;
@@ -210,8 +382,6 @@ Mat CameraMonitor::NextFrame()
 
     return frame;
 }
-
-
 
 void CameraMonitor::CalculateHull(Mat frame, const ContourList &contours,
         FrameCalculations &calcs)
@@ -396,4 +566,8 @@ void CameraMonitor::GetRangeOfContour(const std::vector<Point> &contour,
     range_x2 = max_x;
     range_y2 = max_y;
 }
+
+#endif
+
+
 

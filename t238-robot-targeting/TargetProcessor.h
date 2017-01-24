@@ -30,6 +30,8 @@ class TargetProcessor
                 int blurIndex);
 
         void Process(cv::Mat frame);
+        ContourList Process_hull(cv::Mat frame);
+        cv::Mat Process_filter(cv::Mat frame);
 
         const ContourList &GetHull() const
         {

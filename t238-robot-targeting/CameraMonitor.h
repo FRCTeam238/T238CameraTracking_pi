@@ -18,6 +18,14 @@ struct CameraSettings
     int BlurIndex;
 };
 
+struct Rectangle
+{
+    int x1, y1;
+    int x2, y2;
+};
+
+typedef std::vector<Rectangle> RectList;
+
 class CameraMonitor
 {
     public:
@@ -66,6 +74,7 @@ class CameraMonitor
 
         bool ReadFrame(cv::Mat &frame);
 
+#if 0
         static void DrawAllHull(cv::Mat frame, const ContourList &contours,
             bool isHull);
         static void DrawHull(cv::Mat frame, const ContourList &contours,
@@ -77,6 +86,13 @@ class CameraMonitor
         static void DrawHullRectangles(cv::Mat frame,
                 const ContourList &contours,
                 FrameCalculations &calcs);
+#endif
+
+        /* revision 2 */
+        Rectangle GetRangeOfContour(std::vector<cv::Point> contour) const;
+        //C RectList FindRects(cv::Mat frame, ContourList hull) const;
+        RectList FindRects(cv::Mat frame, const ContourList &hull) const;
+        cv::Mat DrawRectangles(cv::Mat frame, const RectList &rects) const;
 
         CameraSettings mSettings;
         int mColorMode;

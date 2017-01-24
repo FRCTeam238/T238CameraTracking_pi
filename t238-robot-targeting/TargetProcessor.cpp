@@ -4,7 +4,6 @@
 
 using namespace cv;
 
-#if 1
 TargetProcessor::TargetProcessor(int colorMode, int blurIndex,
     cv::Scalar threshLow, cv::Scalar threshHigh)
     : mBlurIndex(blurIndex),
@@ -16,19 +15,43 @@ TargetProcessor::TargetProcessor(int colorMode, int blurIndex,
 {
     // do nothing
 }
-#else
-
-TargetProcessor::TargetProcessor()
-{
-    // do nothing
-}
-#endif
 
 TargetProcessor::~TargetProcessor()
 {
     // do nothing
 }
 
+#if 1
+Mat TargetProcessor::Process_filter(cv::Mat frame)
+{
+    frame = convertColor.Process(frame);
+
+    if (mBlurIndex > 0)
+    {
+        frame = blur.Process(frame);
+    }
+
+    frame = threshold.Process(frame);
+
+    return frame;
+}
+
+ContourList TargetProcessor::Process_hull(cv::Mat frame)
+{
+    cv::Mat ccframe = frame.clone();
+    mContours = contourBuilder.Process(ccframe);
+    mHull = hullBuilder.Process(mContours);
+
+    return mHull;
+}
+
+void TargetProcessor::Process(cv::Mat frame)
+{
+    Mat ccframe = Process_filter(frame);
+    Process_hull(ccframe);
+}
+
+#else
 void TargetProcessor::Process(cv::Mat frame)
 {
     frame = convertColor.Process(frame);
@@ -43,34 +66,8 @@ void TargetProcessor::Process(cv::Mat frame)
     cv::Mat ccframe = frame.clone();
     mContours = contourBuilder.Process(ccframe);
     mHull = hullBuilder.Process(mContours);
-
-#if 0
-    static int frameCount = 0;
-    //TODO the frame count is used to determine the 
-    //  fps - at some point convert this to be a rolling avg
-    //  instead of a true average over the life of the program
-    frameCount++;
-    if (frameCount == 0)
-    {
-        frameCount = 1;
-    }
-
-    if (Config.DebugMode == DM_Normal)
-    {
-    }
-    else if (Config.DebugMode == DM_RotatingNumbers)
-    {
-        // emit results to the transmit buffer here
-        static int angle = 0;
-        static int direction = 0;
-
-        UpdateCameraData(angle, direction, frameCount);
-
-        angle++;
-        direction--;
-    }
-#endif
 }
+#endif
 
 void TargetProcessor::Initialize(int colorMode,
         int lowerHue, int upperHue,
