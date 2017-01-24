@@ -125,6 +125,10 @@ class CameraMonitor
         //C RectList FindRects(cv::Mat frame, ContourList hull) const;
         RectList FindRects(cv::Mat frame, const ContourList &hull) const;
         cv::Mat DrawRectangles(cv::Mat frame, const RectList &rects) const;
+        static double CalculateHorizontalAngle(const Rectangle &rect,
+                cv::Mat frame);
+        static double CalculateVerticalAngle(const Rectangle &rect,
+                cv::Mat frame);
 
         CameraSettings mSettings;
         int mColorMode;

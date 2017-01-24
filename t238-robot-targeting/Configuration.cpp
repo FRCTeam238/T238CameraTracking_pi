@@ -21,6 +21,7 @@ void ConfigurationInitialize()
     Config.DB_DrawAllHull = true;
 
     Config.AngleWidth = 60.0;
+    Config.AngleHeight = 45.0;
 
     Config.RP_Enable = true;
 

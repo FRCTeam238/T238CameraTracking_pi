@@ -12,6 +12,7 @@ enum DebugModeSetting
 struct Configuration
 {
     double AngleWidth;
+    double AngleHeight;
 
     bool RP_Enable;
 

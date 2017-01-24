@@ -55,12 +55,12 @@ static CameraData sCameraData;
 pthread_mutex_t cameraDataMutex = PTHREAD_MUTEX_INITIALIZER;
 static long cameraDataTimeStart = 0;
 
-void UpdateCameraData(int angle, int direction, long frameCount)
+void UpdateCameraData(int angle_h, int angle_v, long frameCount)
 {
     pthread_mutex_lock(&cameraDataMutex);
 
-    sCameraData.angle = (uint8_t)angle;
-    sCameraData.direction = (uint8_t)direction;
+    sCameraData.angle_h = (uint8_t)angle_h;
+    sCameraData.angle_v = (uint8_t)angle_v;
     sCameraData.frameCount = (uint32_t)frameCount;
 
     pthread_mutex_unlock(&cameraDataMutex);

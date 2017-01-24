@@ -276,6 +276,58 @@ cv::Mat CameraMonitor::DrawRectangles(cv::Mat frame, const RectList &rects) cons
     return frame;
 }
 
+
+double CameraMonitor::CalculateHorizontalAngle(const Rectangle &rect,
+        cv::Mat frame)
+{
+    // find the ratio position of the center of the rectangle
+    // on the screen
+    double dd = 
+            (double)rect.CenterX() /
+            (double)frame.size().width;
+
+    // turn the ratio into an angle
+    double angle_d = (Config.AngleWidth * dd) -
+            (Config.AngleWidth / 2.0);
+    
+    if (angle_d > 60)
+    {
+        angle_d = 127.0;
+    }
+    else if (angle_d < -60)
+    {
+        angle_d = 127.0;
+    }
+
+    return angle_d * 2.0;
+}
+
+double CameraMonitor::CalculateVerticalAngle(const Rectangle &rect,
+        cv::Mat frame)
+{
+    // find the ratio position of the center of the rectangle
+    // on the screen
+    double dd = 
+            (double)rect.CenterY() /
+            (double)frame.size().height;
+
+    // turn the ratio into an angle
+    double angle_d = (Config.AngleHeight * dd) -
+            (Config.AngleHeight / 2.0);
+    
+    if (angle_d > 60)
+    {
+        angle_d = 127.0;
+    }
+    else if (angle_d < -60)
+    {
+        angle_d = 127.0;
+    }
+
+    return angle_d * 2.0;
+}
+
+
 Mat CameraMonitor::NextFrame()
 {
     Mat frame;
@@ -316,29 +368,10 @@ Mat CameraMonitor::NextFrame()
 
         if ((largestRect.Width() > 0) && (largestRect.Height() > 0))
         {
-            // find the ratio position of the center of the rectangle
-            // on the screen
-            double dd = 
-                    (double)largestRect.CenterX() /
-                    (double)frame.size().width;
+            double angle_d = CalculateHorizontalAngle(largestRect, frame);
+            double distance_d = CalculateVerticalAngle(largestRect, frame);
 
-            // turn the ratio into an angle
-            double angle_d = (Config.AngleWidth * dd) -
-                    (Config.AngleWidth / 2.0);
-            
-            //TODO calculate this
-            double distance_d = 127;
-
-            if (angle_d > 60)
-            {
-                angle_d = 127.0;
-            }
-            else if (angle_d < -60)
-            {
-                angle_d = 127.0;
-            }
-
-            int angle_i = (int)(angle_d * 2.0);
+            int angle_i = (int)(angle_d);
             int distance_i = (int)(distance_d);
 
             UpdateCameraData(angle_i, distance_i, frameCount);

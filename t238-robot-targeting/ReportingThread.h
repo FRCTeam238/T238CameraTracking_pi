@@ -3,8 +3,8 @@
 
 struct CameraData
 {
-    uint8_t  angle;
-    uint8_t  direction;
+    uint8_t  angle_h; // horizontal angle from center of camera
+    uint8_t  angle_v; // vertical angle from center of camera
     uint8_t  reserved1;
     uint8_t  fps;
 
@@ -32,7 +32,7 @@ struct CameraData
 
 /* External declarations */
 extern void StartReportingThread();
-extern void UpdateCameraData(int angle, int direction, long frameCount);
+extern void UpdateCameraData(int angle_h, int angle_v, long frameCount);
 
 #endif
 
