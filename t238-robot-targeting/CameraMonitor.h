@@ -22,6 +22,38 @@ struct Rectangle
 {
     int x1, y1;
     int x2, y2;
+
+    public:
+        bool IsSmallerThan(const Rectangle &other) const
+        {
+            return
+                Area() < other.Area();
+        }
+
+        int Area() const
+        {
+            return Width() * Height();
+        }
+
+        int Width() const
+        {
+            return x2 - x1;
+        }
+
+        int Height() const
+        {
+            return y2 - y1;
+        }
+
+        int CenterX() const
+        {
+            return (Width() / 2 ) + x1;
+        }
+
+        int CenterY() const
+        {
+            return (Height() / 2) + y1;
+        }
 };
 
 typedef std::vector<Rectangle> RectList;
