@@ -9,6 +9,18 @@ class Target2017v2
     private MatOfPoint mHull = null;
     private Rect mBounds = null;
 
+    public String toString()
+    {
+        if (mBounds == null)
+        {
+            return "TT[null]";
+        }
+        else
+        {
+            return "TT[" + mBounds.toString() + "]";
+        }
+    }
+
     public Target2017v2()
     {
         SetHullData(null);
@@ -17,6 +29,15 @@ class Target2017v2
     public Target2017v2(MatOfPoint hull)
     {
         SetHullData(hull);
+    }
+
+    public Target2017v2(double x, double y, double w, double h)
+    {
+        MatOfPoint points = new MatOfPoint(
+            new Point(x,y),
+            new Point(x + w, y + h)
+        );
+        SetHullData(points);
     }
 
     public void SetHullData(MatOfPoint hull)
@@ -93,6 +114,11 @@ class Target2017v2
         {
             return false;
         }
+    }
+
+    public boolean IsIntersecting(Target2017v2 other)
+    {
+        return false;
     }
 }
 

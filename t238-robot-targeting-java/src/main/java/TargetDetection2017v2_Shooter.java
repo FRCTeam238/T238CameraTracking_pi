@@ -16,103 +16,9 @@ import org.opencv.core.Scalar;
 import org.opencv.core.*;
 import org.opencv.imgproc.*;
 
-/*
-class Target2017v2
-{
-    private MatOfPoint mHull = null;
-    private Rect mBounds = null;
-
-    public Target2017v2()
-    {
-        SetHullData(null);
-    }
-
-    public Target2017v2(MatOfPoint hull)
-    {
-        SetHullData(hull);
-    }
-
-    public void SetHullData(MatOfPoint hull)
-    {
-        if (hull == null)
-        {
-            mHull = null;
-            mBounds = null;
-        }
-        else
-        {
-            mHull = hull;
-            mBounds = Imgproc.boundingRect(mHull);
-        }
-    }
-
-    public MatOfPoint GetHullData()
-    {
-        return mHull;
-    }
-
-    public Point GetCenter()
-    {
-        Rect rect = GetBoundingRectangle();
-
-        if ((rect.width > 0.0) && (rect.height > 0.0))
-        {
-            return new Point(
-                rect.x + (rect.width / 2.0),
-                rect.y + (rect.height / 2.0));
-        }
-        else
-        {
-            return new Point(-1, -1);
-        }
-    }
-
-    public Rect GetBoundingRectangle()
-    {
-        return mBounds;
-    }
-
-    public double Width()
-    {
-        if (mBounds == null)
-        {
-            return 0.0;
-        }
-        else
-        {
-            return mBounds.width;
-        }
-    }
-
-    public double Height()
-    {
-        if (mBounds == null)
-        {
-            return 0.0;
-        }
-        else
-        {
-            return mBounds.height;
-        }
-    }
-
-    public boolean IsLargerThan(Target2017v2 other)
-    {
-        if ((Width() * Height()) > (other.Width() * other.Height()))
-        {
-            return true;
-        }
-        else
-        {
-            return false;
-        }
-    }
-}
-*/
-
-
 class TargetDetection2017v2_Shooter
 {
+    /*
     private final double TARGET_RATIO = 2.0 / 5.0;
     private final double TARGET_RATIO_BOUNDING = 0.50;
     private final double TARGET_RATIO_LOW =
@@ -121,9 +27,18 @@ class TargetDetection2017v2_Shooter
             TARGET_RATIO + (TARGET_RATIO * TARGET_RATIO_BOUNDING);
     private final double TARGET_MIN_WIDTH = 15.0;
 
+    */
+
+    // When determining if a target is approximately half the height
+    // of another the detected height of the smaller target has to
+    // be within a bounded percentage of the expected height.
+    private final double TARGET_MIN_BOUNDING = 0.4;
+    private final double TARGET_HEIGHT_RATIO = 2.0 / 10.0;
+
     private List<Target2017v2> mKeep;
     private List<Target2017v2> mDiscard;
 
+    /*
     public Target2017v2 Process(ArrayList<MatOfPoint> hulls)
     {
         Target2017v2 returnTarget = null;
@@ -157,6 +72,115 @@ class TargetDetection2017v2_Shooter
 
         return returnTarget;
     }
+    */
+
+    public Target2017v2 Process(ArrayList<MatOfPoint> hulls)
+    {
+        Target2017v2 returnTarget = null;
+
+        //TODO maybe make these linked lists - 
+        //   linked list would be better insertion, but would also want
+        //   to make the system use iterators instead of indexing
+        //mKeep = new ArrayList<Target2017v2>();
+        mKeep = new ArrayList<Target2017v2>();
+        mDiscard = new ArrayList<Target2017v2>();
+
+        // convert all of the MatOfPoint arrays to Targets
+        // add them to the list so that they are largest to smallest
+        for (int index = 0; index < hulls.size(); index++)
+        {
+            Target2017v2 target = new Target2017v2(hulls.get(index));
+            //mDiscard.add(target);
+            InsertTallestToShortest(target, mDiscard);
+        }
+
+        if (mDiscard.size() > 1)
+        {
+            // now pick the largest and see if there is one approximately
+            // half the height
+
+            // if this succeeds we expect a target that represents the area
+            // of both targets together
+            returnTarget = FindShooterTarget(mDiscard);
+        }
+        // else - no matching pair so return a null target
+
+        return returnTarget;
+    }
+
+    /* Find two targets that are a matched set. A matched set is a target
+       that appears relatively above one another, and the lower one is
+       half the height of the upper.
+
+       This method expects targets to be sorted tallest to shortest.
+
+       This function only picks the first matched set.
+
+     */
+    private Target2017v2 FindShooterTarget(List<Target2017v2> targets)
+    {
+        Target2017v2 retval_target = null;
+
+        for (int index = 0;
+                (index < targets.size()) && (retval_target == null);
+                index++)
+        {
+            Target2017v2 target_parent = targets.get(index);
+
+            for (int index_child = 1;
+                    index_child < targets.size(); index_child++)
+            {
+                Target2017v2 target_child = targets.get(index_child);
+
+                if (!target_parent.IsIntersecting(target_child))
+                {
+                    Rect target_parent_bounds =
+                            target_parent.GetBoundingRectangle();
+                    Rect target_child_bounds =
+                            target_child.GetBoundingRectangle();
+
+                    Rect ref = new Rect();
+                    ref.x = target_parent_bounds.x;
+                    ref.y = target_parent_bounds.y;
+
+                    ref.width = target_parent_bounds.width;
+                    ref.height = 
+                        (int)(target_parent_bounds.height * (10.0 / 4.0));
+
+                    double expectedHeight = ref.height * TARGET_HEIGHT_RATIO;
+
+                    double expectedHeight_Min = expectedHeight -
+                            (expectedHeight * TARGET_MIN_BOUNDING);
+
+                    double expectedHeight_Max = expectedHeight +
+                            (expectedHeight * TARGET_MIN_BOUNDING);
+
+                    System.out.println(String.format("%s <> %s",
+                            target_parent.toString(), target_child.toString()));
+                    System.out.println(String.format("  -- min=%f  max=%f", 
+                            expectedHeight_Min, expectedHeight_Max));
+
+                    if ((target_child.Height() < expectedHeight_Max) &&
+                        (target_child.Height() > expectedHeight_Min))
+                    {
+                        // this is a match
+                        retval_target = new Target2017v2(
+                            ref.x,
+                            ref.y,
+                            ref.width,
+                            (target_child_bounds.y - target_parent_bounds.y) +
+                                    target_child_bounds.height
+                        );
+                        mKeep.add(retval_target);
+                        break;
+                    }
+                }
+            }
+        }
+        System.out.println();
+
+        return retval_target;
+    }
 
     public List<Target2017v2> GetKept()
     {
@@ -173,14 +197,14 @@ class TargetDetection2017v2_Shooter
         return (low_limit <= value) && (value <= high_limit);
     }
 
-    private void InsertLargestToSmallest(Target2017v2 target,
+    private void InsertTallestToShortest(Target2017v2 target,
             List<Target2017v2> targetList)
     {
         boolean hasAdded = false;
 
         for (int index = 0; index < targetList.size(); index++)
         {
-            if (target.IsLargerThan(targetList.get(index)))
+            if (target.Height() > targetList.get(index).Height())
             {
                 targetList.add(index, target);
                 hasAdded = true;
@@ -197,7 +221,7 @@ class TargetDetection2017v2_Shooter
 
 class TargetTracking2017v2_Shooter
 {
-    private TargetDetection2017v2_Gear mTargetDetection = null;
+    private TargetDetection2017v2_Shooter mTargetDetection = null;
     private Mat mInputImage = null;
     private CvSink mImageSink = null;
     private CvSource mImageSource = null;
@@ -238,7 +262,7 @@ class TargetTracking2017v2_Shooter
         mInputImage = new Mat();
         //mHSVImage = new Mat();
 
-        mTargetDetection = new TargetDetection2017v2_Gear();
+        mTargetDetection = new TargetDetection2017v2_Shooter();
 
         mResolutionWidth = resolutionWidth;
         mResolutionHeight = resolutionHeight;
@@ -268,7 +292,6 @@ class TargetTracking2017v2_Shooter
 
             if ((target != null) && (target.GetBoundingRectangle() != null))
             {
-                System.out.println(String.format("w=%f", target.Width()));
                 center = target.GetCenter();
 
                 //TODO NOTE This is specific to the expected direction
@@ -289,8 +312,8 @@ class TargetTracking2017v2_Shooter
             }
             // else - leave the horizontal and vertical = 127.0
 
-            mNetworkTable.putNumber("Gear Horizontal", horizontalAngle);
-            mNetworkTable.putNumber("Gear Vertical", verticalAngle);
+            mNetworkTable.putNumber("Shooter Horizontal", horizontalAngle);
+            mNetworkTable.putNumber("Shooter Vertical", verticalAngle);
 
             outputImage = DrawTargets(outputImage,
                     mTargetDetection.GetDiscards(),
@@ -298,12 +321,12 @@ class TargetTracking2017v2_Shooter
 
             outputImage = DrawTargets(outputImage, 
                     mTargetDetection.GetKept(),
-                    new Scalar(255, 255, 0));
+                    new Scalar(255, 0, 255));
 
             if ((target != null) && (target.GetBoundingRectangle() != null))
             {
                 outputImage = DrawPoint(outputImage,
-                        center, new Scalar(0, 0, 255));
+                        center, new Scalar(0, 255, 255));
 
             }
 
