@@ -169,13 +169,13 @@ class TargetDetection2017_Gear extends TargetDetection
 
                 double right_edge_min = 
                     current_center.x + 
-                    ((target_current.Width() / 2.0) * 8.25) - 
-                    (target_current.Width() * 0.2);
+                    ((target_current.Width() / 2.0) * 7.25) - 
+                    (target_current.Width() * 0.4);
 
                 double right_edge_max =
                     current_center.x +
-                    ((target_current.Width() / 2.0) * 8.25) + 
-                    (target_current.Width() * 0.2);
+                    ((target_current.Width() / 2.0) * 7.25) + 
+                    (target_current.Width() * 0.4);
 
                 double horizontal_min =
                     current_center.y - (target_current.Height() * 0.5);

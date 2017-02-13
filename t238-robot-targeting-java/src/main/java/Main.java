@@ -34,7 +34,8 @@ public class Main {
         TargetTracking.CAMERA_RESOLUTION_HEIGHT);
 
     /***********************************************/
-    TargetTracking tracking = new TargetTracking();
+    /*C TargetTracking tracking = new TargetTracking(); */
+    TargetTracking2017v2_Gear tracking = new TargetTracking2017v2_Gear();
     tracking.Initialize(camera,
             (double)TargetTracking.CAMERA_RESOLUTION_WIDTH,
             (double)TargetTracking.CAMERA_RESOLUTION_HEIGHT,

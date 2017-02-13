@@ -40,14 +40,14 @@ public class GripPipeline {
 		// Step Blur0:
 		Mat blurInput = source0;
 		BlurType blurType = BlurType.get("Box Blur");
-		double blurRadius = 5.405405405405405;
+		double blurRadius = 8.108108108108109;
 		blur(blurInput, blurType, blurRadius, blurOutput);
 
 		// Step HSV_Threshold0:
 		Mat hsvThresholdInput = blurOutput;
-		double[] hsvThresholdHue = {71.22302158273381, 98.60068259385666};
-		double[] hsvThresholdSaturation = {84.84712230215827, 255.0};
-		double[] hsvThresholdValue = {167.40107913669064, 255.0};
+		double[] hsvThresholdHue = {72.84172661870504, 92.45733788395904};
+		double[] hsvThresholdSaturation = {17.657208707796265, 54.82935153583619};
+		double[] hsvThresholdValue = {213.2643884892086, 232.72890220247007};
 		hsvThreshold(hsvThresholdInput, hsvThresholdHue, hsvThresholdSaturation, hsvThresholdValue, hsvThresholdOutput);
 
 		// Step Find_Contours0:
