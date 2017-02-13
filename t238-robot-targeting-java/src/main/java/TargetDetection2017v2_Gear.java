@@ -16,7 +16,7 @@ import org.opencv.core.Scalar;
 import org.opencv.core.*;
 import org.opencv.imgproc.*;
 
-/* Testing */
+/*
 class Target2017v2
 {
     private MatOfPoint mHull = null;
@@ -108,6 +108,7 @@ class Target2017v2
         }
     }
 }
+*/
 
 
 class TargetDetection2017v2_Gear 
