@@ -18,17 +18,6 @@ import org.opencv.imgproc.*;
 
 class TargetDetection2017v2_Shooter
 {
-    /*
-    private final double TARGET_RATIO = 2.0 / 5.0;
-    private final double TARGET_RATIO_BOUNDING = 0.50;
-    private final double TARGET_RATIO_LOW =
-            TARGET_RATIO - (TARGET_RATIO * TARGET_RATIO_BOUNDING);
-    private final double TARGET_RATIO_HIGH =
-            TARGET_RATIO + (TARGET_RATIO * TARGET_RATIO_BOUNDING);
-    private final double TARGET_MIN_WIDTH = 15.0;
-
-    */
-
     // When determining if a target is approximately half the height
     // of another the detected height of the smaller target has to
     // be within a bounded percentage of the expected height.
@@ -37,42 +26,6 @@ class TargetDetection2017v2_Shooter
 
     private List<Target2017v2> mKeep;
     private List<Target2017v2> mDiscard;
-
-    /*
-    public Target2017v2 Process(ArrayList<MatOfPoint> hulls)
-    {
-        Target2017v2 returnTarget = null;
-
-        //TODO maybe make these linked lists - 
-        //   linked list would be better insertion, but would also want
-        //   to make the system use iterators instead of indexing
-        mKeep = new ArrayList<Target2017v2>();
-        mDiscard = new ArrayList<Target2017v2>();
-        
-        //System.out.println(String.format("hulls.size=%d", hulls.size()));
-        for (int index = 0; index < hulls.size(); index++)
-        {
-            Target2017v2 target = new Target2017v2(hulls.get(index));
-
-            if (!IsBounded(
-                    target.Width() / target.Height(),
-                    TARGET_RATIO_LOW,
-                    TARGET_RATIO_HIGH)|| 
-                (target.Width() < TARGET_MIN_WIDTH))
-            {
-                mDiscard.add(target);
-            }
-            else
-            {
-                InsertLargestToSmallest(target, mKeep);
-
-                returnTarget = target;
-            }
-        }
-
-        return returnTarget;
-    }
-    */
 
     public Target2017v2 Process(ArrayList<MatOfPoint> hulls)
     {
@@ -155,10 +108,10 @@ class TargetDetection2017v2_Shooter
                     double expectedHeight_Max = expectedHeight +
                             (expectedHeight * TARGET_MIN_BOUNDING);
 
-                    System.out.println(String.format("%s <> %s",
-                            target_parent.toString(), target_child.toString()));
-                    System.out.println(String.format("  -- min=%f  max=%f", 
-                            expectedHeight_Min, expectedHeight_Max));
+                    //System.out.println(String.format("%s <> %s",
+                    //        target_parent.toString(), target_child.toString()));
+                    //System.out.println(String.format("  -- min=%f  max=%f", 
+                    //        expectedHeight_Min, expectedHeight_Max));
 
                     if ((target_child.Height() < expectedHeight_Max) &&
                         (target_child.Height() > expectedHeight_Min))
@@ -177,7 +130,6 @@ class TargetDetection2017v2_Shooter
                 }
             }
         }
-        System.out.println();
 
         return retval_target;
     }
@@ -260,7 +212,6 @@ class TargetTracking2017v2_Shooter
         // All Mats and Lists should be stored outside the
         // loop to avoid allocations as they are expensive to create
         mInputImage = new Mat();
-        //mHSVImage = new Mat();
 
         mTargetDetection = new TargetDetection2017v2_Shooter();
 
@@ -327,7 +278,6 @@ class TargetTracking2017v2_Shooter
             {
                 outputImage = DrawPoint(outputImage,
                         center, new Scalar(0, 255, 255));
-
             }
 
             mImageSource.putFrame(outputImage);

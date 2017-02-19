@@ -13,113 +13,41 @@ import org.opencv.core.MatOfPoint;
 import org.opencv.core.MatOfPoint2f;
 import org.opencv.core.Rect;
 import org.opencv.core.Scalar;
+import org.opencv.core.Size;
 import org.opencv.core.*;
 import org.opencv.imgproc.*;
 
-/*
-class Target2017v2
-{
-    private MatOfPoint mHull = null;
-    private Rect mBounds = null;
-
-    public Target2017v2()
-    {
-        SetHullData(null);
-    }
-
-    public Target2017v2(MatOfPoint hull)
-    {
-        SetHullData(hull);
-    }
-
-    public void SetHullData(MatOfPoint hull)
-    {
-        if (hull == null)
-        {
-            mHull = null;
-            mBounds = null;
-        }
-        else
-        {
-            mHull = hull;
-            mBounds = Imgproc.boundingRect(mHull);
-        }
-    }
-
-    public MatOfPoint GetHullData()
-    {
-        return mHull;
-    }
-
-    public Point GetCenter()
-    {
-        Rect rect = GetBoundingRectangle();
-
-        if ((rect.width > 0.0) && (rect.height > 0.0))
-        {
-            return new Point(
-                rect.x + (rect.width / 2.0),
-                rect.y + (rect.height / 2.0));
-        }
-        else
-        {
-            return new Point(-1, -1);
-        }
-    }
-
-    public Rect GetBoundingRectangle()
-    {
-        return mBounds;
-    }
-
-    public double Width()
-    {
-        if (mBounds == null)
-        {
-            return 0.0;
-        }
-        else
-        {
-            return mBounds.width;
-        }
-    }
-
-    public double Height()
-    {
-        if (mBounds == null)
-        {
-            return 0.0;
-        }
-        else
-        {
-            return mBounds.height;
-        }
-    }
-
-    public boolean IsLargerThan(Target2017v2 other)
-    {
-        if ((Width() * Height()) > (other.Width() * other.Height()))
-        {
-            return true;
-        }
-        else
-        {
-            return false;
-        }
-    }
-}
-*/
-
-
+/* Detect targets within the provided hull data.
+ *
+ * Hulls are arrays of points describing a detected shape from
+ * an image. This list is produced from the image pipeline in
+ * GripPipeline.
+ * 
+ * The Process method will select targets that fit the 
+ * expected look of a target. When some of these targets
+ * are found the system tries to find a matching pair.
+ * 
+ * If only a single target is found then that is returned
+ * and the caller is expected to make sense of seeing only
+ * one. When a pair is found then the left most target area
+ * is returned with the anticipation that the caller can
+ * figure out the overall size of the target.
+ *
+ */
 class TargetDetection2017v2_Gear 
 {
-    private final double TARGET_RATIO = 2.0 / 5.0;
-    private final double TARGET_RATIO_BOUNDING = 0.50;
-    private final double TARGET_RATIO_LOW =
+    public final double TARGET_RATIO = 2.0 / 5.0;
+    public final double TARGET_RATIO_BOUNDING = 0.40;
+    public final double TARGET_RATIO_LOW =
             TARGET_RATIO - (TARGET_RATIO * TARGET_RATIO_BOUNDING);
-    private final double TARGET_RATIO_HIGH =
+    public final double TARGET_RATIO_HIGH =
             TARGET_RATIO + (TARGET_RATIO * TARGET_RATIO_BOUNDING);
-    private final double TARGET_MIN_WIDTH = 15.0;
+    public final double TARGET_MIN_WIDTH = 15.0;
+    public static final double TARGET_SIZE_APPROX_LOW = 0.70;
+    public static final double TARGET_SIZE_APPROX_HIGH = 1.30;
+    public static final int TARGET_DIRECTION_FROM_LEFT = 0;
+    public static final int TARGET_DIRECTION_FROM_RIGHT = 1;
+    public static final double TARGET_TO_CENTER_MULTIPLIER = 2.2;
 
     private List<Target2017v2> mKeep;
     private List<Target2017v2> mDiscard;
@@ -130,7 +58,9 @@ class TargetDetection2017v2_Gear
 
         //TODO maybe make these linked lists - 
         //   linked list would be better insertion, but would also want
-        //   to make the system use iterators instead of indexing
+        //   to switch to using iterators instead of random access lookups
+        //   in loops.
+        //
         mKeep = new ArrayList<Target2017v2>();
         mDiscard = new ArrayList<Target2017v2>();
         
@@ -150,9 +80,192 @@ class TargetDetection2017v2_Gear
             else
             {
                 InsertLargestToSmallest(target, mKeep);
-
-                returnTarget = target;
             }
+        }
+
+        if (mKeep.size() > 0)
+        {
+            returnTarget = ChooseTarget(mKeep);
+            //if (returnTarget != null)
+            //    System.out.println(returnTarget.GetBoundingRectangle());
+        }
+
+        return returnTarget;
+    }
+
+    /*  Return a suitable target.
+
+        Examine the target list. Pick the largest target and attempt
+        to find one that aligns with it to the left (or right) depending
+        on the direction of approach. If we have two matching targets, use
+        their center points to pick a center point between them.
+
+        Assumptions:
+          1. targets is an ordered list from largest to smallest
+
+        NOT USED - potentially experiment in the future
+     */
+    private Target2017v2 ChooseTarget_v2(List<Target2017v2> targets)
+    {
+        Target2017v2 returnTarget = null;
+
+        if (targets.size() > 0)
+        {
+            Target2017v2 target0 = targets.get(0);
+            Target2017v2 target1 = null;
+
+            returnTarget = target0;
+
+            int returnIndex = 0;
+
+            for (int index = 1; index < targets.size(); index++)
+            {
+                Target2017v2 targetX = targets.get(index);
+
+                if (IsBounded(
+                        targetX.Area() / target0.Area(),
+                        TARGET_SIZE_APPROX_LOW,
+                        TARGET_SIZE_APPROX_HIGH))
+                {
+                    // these two rectangles are approximately the same size
+                    //   areaX / area0 is approximately 1.0
+                    target1 = targetX;
+                }
+                else
+                {
+                    // all other targets should be smaller than this one,
+                    // and smaller so they should never approximately
+                    // the same size as target0
+                    //
+                    // don't bother to look for more
+                    break;
+                }
+            }
+
+            if (target1 == null)
+            {
+                // no other targets, try using this one, but
+                // make it five times larger
+                double x,y,w,h;
+
+                returnTarget = new Target2017v2(
+                    target0.Left(),
+                    target0.Top(),
+                    target0.Width() * 5.0,
+                    target0.Height() * 5.0
+                );
+            }
+            else
+            {
+                // if the compared target is more left than the current
+                // target then pick that target to return
+                /*
+                if (target0.Left() > targetX.Left())
+                {
+                }
+                else
+                {
+                }
+                */
+
+                double x,y,w,h;
+
+                x = Math.min(target0.Left(), target1.Left());
+                y = Math.min(target0.Top(), target1.Top());
+                w = Math.max(target0.Right(), target1.Right()) - x;
+                h = Math.max(target0.Bottom(), target1.Bottom()) - y;
+
+                returnTarget = new Target2017v2(x, y, w, h);
+            }
+        }
+
+        return returnTarget;
+    }
+
+
+    /*
+       This function tries to choose the left target of a target 
+       pair.
+
+       This function will choose the best target from the list of
+       possible targets.
+
+       This function assumes that all targets are possible candidates.
+       The caller has sifted out obviously unreasonable ones and passed
+       in targets ordered largest to smallest.
+
+       The criteria to be chosen ...
+            1. If there is only one target in the list, then pick it
+            2. If there is more than one target the system assumes
+               that the largest target is one of interest and attempts
+               to find a second one that is approximately the same
+               size.
+
+               If a second target is found then the left most of the
+               two is returned.
+
+            Future enhancements:
+              - The two selected targets should be approximately the
+                same size AND approximately side-by-side AND
+                within a certain distance of each other.
+
+                The width of each target is 1/5 of the width of the
+                space between the left-most and right-most edges.
+
+     */
+    private Target2017v2 ChooseTarget(List<Target2017v2> targets)
+    {
+        Target2017v2 returnTarget = null;
+
+        if (targets.size() == 1)
+        {
+            //System.out.println("choose 0 by default");
+            returnTarget = targets.get(0);
+        }
+        else if (targets.size() >= 2)
+        {
+            Target2017v2 target0 = targets.get(0);
+            returnTarget = target0;
+            int returnIndex = 0;
+
+            /* find a target with approximately the same shape and
+               size as the initial target on the list.
+
+               TODO There are some difficiencies with the pattern here
+               where it basically walks the list starting from the top
+               and finds the last target that matches it. It may be
+               questionable whether it really contributes anything 
+               interesting - OTHER THAN that it will generally find the
+               left-most target of the correct size.
+             */
+            for (int index = 1; index < targets.size(); index++)
+            {
+                Target2017v2 targetX = targets.get(index);
+
+                //System.out.println(String.format("    %f <> %f = %f",
+                //        targetX.Area(), target0.Area(),
+                //        targetX.Area() / target0.Area()));
+                if (IsBounded(
+                           targetX.Area() / target0.Area(),
+                            TARGET_SIZE_APPROX_LOW,
+                            TARGET_SIZE_APPROX_HIGH))
+                {
+                    // if the compared target is more left than the current
+                    // one then pick that to return
+                    if (target0.Left() > targetX.Left())
+                    {
+                        returnIndex = index;
+                        returnTarget = targetX;
+                    }
+                }
+                else
+                {
+                    //System.out.println(String.format("tried n=%d", index));
+                    break;
+                }
+            }
+
+            //System.out.println(String.format("i=%d", returnIndex));
         }
 
         return returnTarget;
@@ -168,11 +281,16 @@ class TargetDetection2017v2_Gear
         return mDiscard;
     }
 
-    private boolean IsBounded(double value, double low_limit, double high_limit)
+    /* Test whether a value is inside a limited range. */
+    private boolean IsBounded(double value,
+            double low_limit, double high_limit)
     {
         return (low_limit <= value) && (value <= high_limit);
     }
 
+    /* Insert a new target onto the target list. Keep the target
+       list in sort from largest to smallest.
+     */
     private void InsertLargestToSmallest(Target2017v2 target,
             List<Target2017v2> targetList)
     {
@@ -195,6 +313,8 @@ class TargetDetection2017v2_Gear
     }
 }
 
+/*
+ */
 class TargetTracking2017v2_Gear
 {
     private TargetDetection2017v2_Gear mTargetDetection = null;
@@ -209,6 +329,8 @@ class TargetTracking2017v2_Gear
     private double mWidthDegrees = 0;
     private double mHeightDegrees = 0;
 
+    /* Collect parameters to prepare for processing images.
+     */
     public void Initialize(UsbCamera camera,
             double resolutionWidth, double resolutionHeight,
             double widthDegrees, double heightDegrees)
@@ -225,18 +347,19 @@ class TargetTracking2017v2_Gear
         // This will take in a Mat image that has had OpenCV operations
         mImageSource = new CvSource("Target Image",
                 VideoMode.PixelFormat.kMJPEG,
-                (int)resolutionWidth, (int)resolutionHeight, 30); //TBD 30 ?? FPS?
+                (int)resolutionWidth, (int)resolutionHeight, 30);
 
+        // this defines an output stream where we can show the // calculated target parameters
         MjpegServer cvStream = new MjpegServer("Target Stream",
                 TargetTracking.TARGET_STREAM_PORT);
         cvStream.setSource(mImageSource);
 
+        // the image filter pipeline produced in Grip.
         mPipeline = new GripPipeline();
 
         // All Mats and Lists should be stored outside the
         // loop to avoid allocations as they are expensive to create
         mInputImage = new Mat();
-        //mHSVImage = new Mat();
 
         mTargetDetection = new TargetDetection2017v2_Gear();
 
@@ -246,6 +369,14 @@ class TargetTracking2017v2_Gear
         mHeightDegrees = heightDegrees;
     }
 
+    /* This method will read a camera image frame, find targets,
+       and produce the related angles on the driver station.
+
+       After a camera frame is read the function process through
+       the Grip pipeline, and then uses a TargetDetection object
+       to detect targets. When one is detected the angles 
+       relative to the screen center are pushed into the NetworkTable.
+     */
     public void Process()
     {
         // Grab a frame. If it has a frame time of 0, there was an error.
@@ -268,15 +399,37 @@ class TargetTracking2017v2_Gear
 
             if ((target != null) && (target.GetBoundingRectangle() != null))
             {
-                System.out.println(String.format("w=%f", target.Width()));
+                //System.out.println(String.format("w=%f", target.Width()));
                 center = target.GetCenter();
 
-                //TODO NOTE This is specific to the expected direction
-                //               of the target
-                // shift the center to the right by 2.5 times the current
+                // shift the center to the left/right by 2.5 times the current
                 // target width
                 double original = center.x;
-                center.x += target.Width() * 2;
+
+                /* We can approach the gear target from either the left
+                   or the right. On the left we expect to have full view
+                   of the target area on the left, but not on the right,
+                   so we shift our center point to the right.
+
+                   When we approach from the right we want to shift our
+                   center point to the left.
+                 */
+                int targetDirection = GetTargetDirection();
+                switch (targetDirection)
+                {
+                    default:
+                        //TODO TBD Throw an exception instead?
+                    case Configuration.TRACKING_GEAR_SIDE_left:
+                        center.x += target.Width() *
+                            TargetDetection2017v2_Gear.TARGET_TO_CENTER_MULTIPLIER;
+                        break;
+
+                    case Configuration.TRACKING_GEAR_SIDE_right:
+                        center.x -= target.Width() *
+                            TargetDetection2017v2_Gear.TARGET_TO_CENTER_MULTIPLIER;
+                    break;
+
+                }
 
                 //System.out.println(String.format("%f %f %f",
                 //        original, center.x, target.Width()));
@@ -292,25 +445,64 @@ class TargetTracking2017v2_Gear
             mNetworkTable.putNumber("Gear Horizontal", horizontalAngle);
             mNetworkTable.putNumber("Gear Vertical", verticalAngle);
 
+            outputImage = DrawReticle(outputImage, new Scalar(80,80,255));
+
             outputImage = DrawTargets(outputImage,
                     mTargetDetection.GetDiscards(),
                     new Scalar(28, 28, 28));
 
             outputImage = DrawTargets(outputImage, 
                     mTargetDetection.GetKept(),
-                    new Scalar(255, 255, 0));
+                    new Scalar(255, 0, 255));
 
             if ((target != null) && (target.GetBoundingRectangle() != null))
             {
                 outputImage = DrawPoint(outputImage,
                         center, new Scalar(0, 0, 255));
-
             }
 
             mImageSource.putFrame(outputImage);
         }
     }
 
+    /* Checks the current Gear Side setting ...
+
+       Are we approaching from the left side of the gear peg or
+       from the right.
+
+       The value comes from the NetworkTable ("Gear Side") parameter
+       but if that is not defined the value is provided by the 
+       Configuration object.
+
+     */
+    private int GetTargetDirection()
+    {
+        int retval = Configuration.GetInstance().GetTrackingGearSide();
+
+        try 
+        {
+            double side = mNetworkTable.getNumber("Gear Side");
+            if (side <= 0.0)
+            {
+                retval = Configuration.TRACKING_GEAR_SIDE_left;
+            }
+            else
+            {
+                retval = Configuration.TRACKING_GEAR_SIDE_right;
+            }
+        }
+        catch (Exception ex)
+        {
+            //System.out.println(ex);
+            // couldn't read the network table value, do nothing, let the
+            // configuration have control
+        }
+
+        return retval;
+    }
+
+    /* Draw the rectangle and center point of each hull provided.
+     */
     private Mat DrawTargets(Mat inputImage,
             List<Target2017v2> hulls, Scalar color)
     {
@@ -339,7 +531,7 @@ class TargetTracking2017v2_Gear
                 Imgproc.rectangle(image, 
                     new Point(center.x, center.y),
                     new Point(center.x + center.width, center.y + center.height),
-                    color, 0);
+                    color, -1);
             }
         }
 
@@ -347,6 +539,8 @@ class TargetTracking2017v2_Gear
 
     }
 
+    /* Draw a small rectangle to represent a point.
+     */
     private Mat DrawPoint(Mat image, Point pt, Scalar color)
     {
         if ((pt.x != -1) && (pt.y != -1))
@@ -358,17 +552,38 @@ class TargetTracking2017v2_Gear
                 pt_tl, 
                 pt_br,
                 color,
-                2);
+                -1);
         }
 
         return image;
     }
 
+    /* Draw a reticle at the center of the provided image.
+     */
+    private Mat DrawReticle(Mat image, Scalar color)
+    {
+        Size size = image.size();
+        Point pt1;
+        Point pt2;
+
+        pt1 = new Point( (size.width / 2) - 4, size.height / 2);
+        pt2 = new Point( (size.width / 2) + 4, size.height / 2);
+        Imgproc.line(image, pt1, pt2, color);
+
+        pt1 = new Point( size.width / 2, (size.height / 2) - 4);
+        pt2 = new Point( size.width / 2, (size.height / 2) + 4);
+        Imgproc.line(image, pt1, pt2, color);
+
+        return image;
+    }
+
+    /* Determine the angle of a point relative to the screen.
+
+     */
     private double CalculateAngleOnScreen(double pixelPosition,
             double pixelRange, double angleRange)
     {
         return
             ((pixelPosition * angleRange ) / pixelRange) - (angleRange / 2.0);
     }
-
 }

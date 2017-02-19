@@ -15,6 +15,49 @@ class Configuration
         return mConfig;
     }
 
+    private void ProcessProperties(Properties props, Iterator it)
+    {
+        while (it.hasNext())
+        {
+            String propertyName = (String)it.next();
+            String propertyValue = props.getProperty(propertyName);
+
+            if (propertyName.equals("tracking_mode"))
+            {
+                if (propertyValue.equals("gear"))
+                {
+                    SetTrackingMode(Configuration.TRACKING_MODE_gear);
+                }
+                else if (propertyValue.equals("shooter"))
+                {
+                    SetTrackingMode(Configuration.TRACKING_MODE_shooter);
+                }
+                else
+                {
+                    System.out.println("props: tracking_mode has a bad value");
+                }
+                System.out.println("tracking_mode=" + GetTrackingMode());
+            }
+            else if (propertyName.equals("tracking_gear_side"))
+            {
+                if (propertyValue.equals("left"))
+                {
+                    SetTrackingGearSide(Configuration.TRACKING_GEAR_SIDE_left);
+                }
+                else if (propertyValue.equals("right"))
+                {
+                    SetTrackingGearSide(Configuration.TRACKING_GEAR_SIDE_right);
+                }
+                else
+                {
+                    System.out.println(
+                            "props: tracking_gear_side has a bad value");
+                }
+                System.out.println("tracking_gear_side=" + GetTrackingGearSide());
+            }
+        }
+    }
+
     public static void Initialize()
     {
         try {
@@ -32,40 +75,8 @@ class Configuration
             Set keys = props.keySet();   // get set-view of keys
             Iterator itr = keys.iterator();
 
-            while (itr.hasNext())
-            {
-                String str = (String)itr.next();
-                System.out.println("PROP: [" +
-                        str + "]=[" + props.getProperty(str) + "]");
+            config.ProcessProperties(props, itr);
 
-                if (str.equals("tracking_mode"))
-                {
-                    String mode = props.getProperty(str);
-
-                    if (mode.equals("gear"))
-                    {
-                        config.SetTrackingMode(
-                                Configuration.TRACKING_MODE_gear);
-                    }
-                    else if (mode.equals("shooter"))
-                    {
-                        config.SetTrackingMode(
-                                Configuration.TRACKING_MODE_shooter);
-                    }
-                    else
-                    {
-                        System.out.println(
-                            "Invalid value for tracking_mode. " +
-                            "Use 'gear' or 'shooter'");
-                        config.SetTrackingMode(
-                                Configuration.TRACKING_MODE_gear);
-                    }
-                }
-                else
-                {
-                    System.out.println("Unknown property");
-                }
-            }
         }
         catch (Exception ex)
         {
@@ -96,6 +107,21 @@ class Configuration
     public int GetTrackingMode()
     {
         return tracking_mode;
+    }
+
+    public static final int TRACKING_GEAR_SIDE_left = 0;
+    public static final int TRACKING_GEAR_SIDE_right = 1;
+
+    private int tracking_gear_side = Configuration.TRACKING_GEAR_SIDE_left;
+
+    public void SetTrackingGearSide(int side)
+    {
+        tracking_gear_side = side;
+    }
+
+    public int GetTrackingGearSide()
+    {
+        return tracking_gear_side;
     }
 }
 

@@ -9,18 +9,6 @@ class Target2017v2
     private MatOfPoint mHull = null;
     private Rect mBounds = null;
 
-    public String toString()
-    {
-        if (mBounds == null)
-        {
-            return "TT[null]";
-        }
-        else
-        {
-            return "TT[" + mBounds.toString() + "]";
-        }
-    }
-
     public Target2017v2()
     {
         SetHullData(null);
@@ -82,26 +70,86 @@ class Target2017v2
 
     public double Width()
     {
-        if (mBounds == null)
+        double retval = 0.0;
+
+        if (mBounds != null)
         {
-            return 0.0;
+            retval = mBounds.width;
         }
-        else
-        {
-            return mBounds.width;
-        }
+
+        return retval;
     }
 
     public double Height()
     {
-        if (mBounds == null)
+        double retval = 0.0;
+
+        if (mBounds != null)
         {
-            return 0.0;
+            retval = mBounds.height;
         }
-        else
+
+        return retval;
+    }
+
+    public double Area() 
+    {
+        double retval = 0.0;
+
+        if (mBounds != null)
         {
-            return mBounds.height;
+            retval = mBounds.area();
         }
+        return retval;
+    }
+
+    public double Top()
+    {
+        double retval = 0.0;
+
+        if (mBounds != null)
+        {
+            retval = mBounds.y;
+        }
+
+        return retval;
+    }
+
+    public double Bottom()
+    {
+        double retval = 0.0;
+        
+        if (mBounds != null)
+        {
+            retval = mBounds.y + mBounds.height;
+        }
+
+        return retval;
+    }
+
+
+    public double Left()
+    {
+        double retval = 0.0;
+
+        if (mBounds != null)
+        {
+            retval = mBounds.x;
+        }
+
+        return retval;
+    }
+
+    public double Right()
+    {
+        double retval = 0.0;
+        
+        if (mBounds != null)
+        {
+            retval = mBounds.x + mBounds.width;
+        }
+
+        return retval;
     }
 
     public boolean IsLargerThan(Target2017v2 other)
@@ -120,5 +168,18 @@ class Target2017v2
     {
         return false;
     }
+
+    public String toString()
+    {
+        if (mBounds == null)
+        {
+            return "TT[null]";
+        }
+        else
+        {
+            return "TT[" + mBounds.toString() + "]";
+        }
+    }
+
 }
 
