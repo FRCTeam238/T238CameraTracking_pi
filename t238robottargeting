@@ -22,7 +22,7 @@ case "$1" in
 	exit 3
 	;;
   stop)
-    cd /home/pi/Work/T238CameraTracking_pi/t238-robot-targeting-java && /home/pi/Work/T238CameraTracking_pi/t238-robot-targeting-java/gradlew stop
+	# No-op
 	;;
   status)
 	# No-op
