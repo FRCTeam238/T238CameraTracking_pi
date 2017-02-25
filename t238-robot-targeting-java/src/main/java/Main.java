@@ -52,6 +52,9 @@ public class Main {
             case Configuration.TRACKING_MODE_gear:
                 RunGear(camera);
                 break;
+                case Configuration.TRACKING_MODE_gear3:
+                RunGear3(camera);
+                break;
             case Configuration.TRACKING_MODE_shooter:
                 RunShooter(camera);
                 break;
@@ -63,6 +66,23 @@ public class Main {
         System.out.println("TRACKING MODE: gear");
 
         TargetTracking2017v2_Gear tracking = new TargetTracking2017v2_Gear();
+        tracking.Initialize(camera,
+            (double)TargetTracking.CAMERA_RESOLUTION_WIDTH,
+            (double)TargetTracking.CAMERA_RESOLUTION_HEIGHT,
+            TargetTracking.CAMERA_WIDTH_DEGREES,
+            TargetTracking.CAMERA_HEIGHT_DEGREES);
+
+        while (true)
+        {
+            tracking.Process();
+        }
+    }
+
+    private static void RunGear3(UsbCamera camera)
+    {
+        System.out.println("TRACKING MODE: gear3");
+
+        TargetTracking2017v3_Gear tracking = new TargetTracking2017v3_Gear();
         tracking.Initialize(camera,
             (double)TargetTracking.CAMERA_RESOLUTION_WIDTH,
             (double)TargetTracking.CAMERA_RESOLUTION_HEIGHT,
