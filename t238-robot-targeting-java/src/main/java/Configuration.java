@@ -37,6 +37,10 @@ class Configuration
                 {
                     SetTrackingMode(Configuration.TRACKING_MODE_shooter);
                 }
+                else if (propertyValue.equals("shooter3"))
+                {
+                    SetTrackingMode(Configuration.TRACKING_MODE_shooter3);
+                }
                 else
                 {
                     System.out.println("props: tracking_mode has a bad value");
@@ -102,6 +106,8 @@ class Configuration
     public static final int TRACKING_MODE_gear = 0;
     public static final int TRACKING_MODE_shooter = 1;
     public static final int TRACKING_MODE_gear3 = 2;
+    public static final int TRACKING_MODE_shooter3 = 3;
+
     private int tracking_mode = Configuration.TRACKING_MODE_gear;
 
     public void SetTrackingMode(int mode)
