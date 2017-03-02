@@ -21,7 +21,7 @@ class TargetDetection2017v3_Shooter
     // When determining if a target is approximately half the height
     // of another the detected height of the smaller target has to
     // be within a bounded percentage of the expected height.
-    private final double TARGET_MIN_BOUNDING = 0.4;
+    private final double TARGET_MIN_BOUNDING = 0.65;
     private final double TARGET_HEIGHT_RATIO = 2.0 / 10.0;
 
     private List<Target2017v2> mKeep;
@@ -79,6 +79,9 @@ class TargetDetection2017v3_Shooter
                 index++)
         {
             Target2017v2 target_parent = targets.get(index);
+            Rect target_parent_bounds =
+                    target_parent.GetBoundingRectangle();
+            //System.out.println(String.format("==%d %d", target_parent_bounds.width, target_parent_bounds.height));
 
             for (int index_child = 1;
                     index_child < targets.size(); index_child++)
@@ -87,10 +90,9 @@ class TargetDetection2017v3_Shooter
 
                 if (!target_parent.IsIntersecting(target_child))
                 {
-                    Rect target_parent_bounds =
-                            target_parent.GetBoundingRectangle();
                     Rect target_child_bounds =
                             target_child.GetBoundingRectangle();
+                    //System.out.println(String.format("++%d %d", target_child_bounds.width, target_child_bounds.height));
 
                     Rect ref = new Rect();
                     ref.x = target_parent_bounds.x;
@@ -236,41 +238,60 @@ class TargetTracking2017v3_Shooter
             Target2017v2 target = mTargetDetection.Process(
                     mPipeline.convexHullsOutput());
 
-            double horizontalAngle = 127.0;
-            double verticalAngle = 127.0;
+            double horizontalAngle = Double.MAX_VALUE;
+            double verticalAngle = Double.MAX_VALUE;
+            double distance = Double.MAX_VALUE;
 
             Point center = new Point();
-            Distance distance = 100000.0;
 
             if ((target != null) && (target.GetBoundingRectangle() != null))
             {
                 center = target.GetCenter();
 
-                //TODO NOTE This is specific to the expected direction
-                //               of the target
-                // shift the center to the right by 2.5 times the current
-                // target width
-                double original = center.x;
-                center.x += target.Width() * 2;
-
-                //System.out.println(String.format("%f %f %f",
-                //        original, center.x, target.Width()));
+                center.y = 240.0 - center.y;
+                center.x = 320.0 - center.x;
 
                 // calculate the angles relative to the center of the screen
-                horizontalAngle = CalculateAngleOnScreen(
-                        center.x, mResolutionWidth, mWidthDegrees);
-                verticalAngle = CalculateAngleOnScreen(
-                        center.y, mResolutionHeight, mHeightDegrees);
+                //horizontalAngle = CalculateAngleOnScreen(
+                //        center.x, mResolutionWidth, mWidthDegrees);
+                //verticalAngle = CalculateAngleOnScreen(
+                //        center.y, mResolutionHeight, mHeightDegrees);
+                //System.out.println(
+                //        String.format("horz angle=%f", horizontalAngle));
+                //System.out.println(
+                //        String.format("vert angle=%f", verticalAngle));
 
-                distance = CalculateDistance(target,
-                        mResolutionHeight, mHeightDegrees);
+                //distance = CalculateDistance_x(target,
+                //        mResolutionHeight, mHeightDegrees);
+                //
+                double horizontalAngle_radians = CalculateTargetAngle(center.x);
+                double verticalAngle_radians = CalculateTargetAngle(center.y);
+                distance = CalculateDistance(verticalAngle_radians);
 
+                horizontalAngle = Math.toDegrees(horizontalAngle_radians);
+                verticalAngle = Math.toDegrees(verticalAngle_radians);
+
+                double at = Math.atan(center.y / TargetTracking.CAMERA_FOCAL_LENGTH);
+                System.out.println(String.format(
+                            "y=%f CFL=%f atan=%f",
+                            center.y,
+                            TargetTracking.CAMERA_FOCAL_LENGTH,
+                            at));
+
+
+                System.out.println(String.format("horz angle=%f", horizontalAngle));
+                System.out.println(String.format("vert angle=%f", verticalAngle));
+                System.out.println(String.format("distance=%f", distance));
+                System.out.println();
             }
             // else - leave the horizontal and vertical = 127.0
 
             mNetworkTable.putNumber("Shooter Distance", distance);
             mNetworkTable.putNumber("Shooter Horizontal", horizontalAngle);
             mNetworkTable.putNumber("Shooter Vertical", verticalAngle);
+
+            outputImage = DrawPoint(outputImage,
+                    new Point(320, 240), new Scalar(255,255, 0));
 
             outputImage = DrawTargets(outputImage,
                     mTargetDetection.GetDiscards(),
@@ -280,11 +301,14 @@ class TargetTracking2017v3_Shooter
                     mTargetDetection.GetKept(),
                     new Scalar(255, 0, 255));
 
+
             if ((target != null) && (target.GetBoundingRectangle() != null))
             {
                 outputImage = DrawPoint(outputImage,
                         center, new Scalar(0, 255, 255));
             }
+
+            // putText(outputImage, "Shooter", new Point(5,5), Core.FONT_HERSHEY_PLAIN, 1.0, new Scalar(0,255,255));
 
             mImageSource.putFrame(outputImage);
         }
@@ -350,7 +374,7 @@ class TargetTracking2017v3_Shooter
             ((pixelPosition * angleRange ) / pixelRange) - (angleRange / 2.0);
     }
 
-    private double CalculateDistance(Target2017v2 target,
+    private double CalculateDistance_x(Target2017v2 target,
                 double resolutionPixels, double resolutionDegrees)
     {
         double angle_top;
@@ -392,6 +416,22 @@ class TargetTracking2017v3_Shooter
         System.out.println(String.format("distance/2=%f", distance / 2.0));
         System.out.println();
 
+        return distance;
+    }
+    private double CalculateTargetAngle(double pixelPosition)
+    {
+        double thetaV = 
+            Math.atan(pixelPosition / TargetTracking.CAMERA_FOCAL_LENGTH);
+        return thetaV;
+    }
+
+    private double CalculateDistance(double thetaV_radians)
+    {
+        double distance =
+            (TargetTracking.SHOOTER_TARGET_HEIGHT_CENTER - 
+                TargetTracking.CAMERA_SHOOTER_HEIGHT) /
+            Math.tan(Math.toRadians(TargetTracking.CAMERA_SHOOTER_ANGLE)
+                    + thetaV_radians);
         return distance;
     }
 }

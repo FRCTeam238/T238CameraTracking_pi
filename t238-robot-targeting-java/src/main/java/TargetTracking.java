@@ -28,8 +28,14 @@ class TargetTracking
 
     public static int CAMERA_RESOLUTION_WIDTH = 640;
     public static int CAMERA_RESOLUTION_HEIGHT = 480;
-    public static double CAMERA_WIDTH_DEGREES = 60;
-    public static double CAMERA_HEIGHT_DEGREES = 45;
+
+    public static final double CAMERA_WIDTH_DEGREES = 51.87;
+    public static final double CAMERA_HEIGHT_DEGREES = 40.35;
+    public static final double CAMERA_FOCAL_LENGTH = 658.0;
+
+    public static final double CAMERA_SHOOTER_ANGLE = 35.0;
+    public static final double CAMERA_SHOOTER_HEIGHT = 15; // TBD in inches
+    public static final double SHOOTER_TARGET_HEIGHT_CENTER = 83.0; // inches
 
     private CvSink mImageSink = null;
     private CvSource mImageSource = null;
