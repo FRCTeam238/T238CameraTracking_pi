@@ -118,7 +118,20 @@ public class Main {
     {
         System.out.println("TRACKING MODE: shooter3");
 
+        /* this lists all of the property names as seen on the
+         * camera configuration on port 1185
+         */
+        /*
+        VideoProperty[] aa = camera.enumerateProperties();
+        for (int ii = 0; ii < aa.length; ii++)
+        {
+            System.out.println(aa[ii].getName());
+        }
+        */
+        
+
         // 
+        camera.getProperty("gain").set(14);
         camera.setBrightness(0);
         camera.setExposureManual(2);
 
