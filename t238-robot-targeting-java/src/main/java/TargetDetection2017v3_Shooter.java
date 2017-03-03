@@ -228,8 +228,14 @@ class TargetTracking2017v3_Shooter
         // Grab a frame. If it has a frame time of 0, there was an error.
         // Just skip and continue
         long frameTime = mImageSink.grabFrame(mInputImage);
-        if (frameTime != 0)
+        if (frameTime == 0)
         {
+            mNetworkTable.putBoolean("Shooter Camera Ready", false);
+            System.out.println("ERROR: Shooter camera error");
+        }
+        else
+        {
+            mNetworkTable.putBoolean("Shooter Camera Ready", true);
             Mat outputImage = mInputImage;
 
             mPipeline.process(mInputImage);

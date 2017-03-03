@@ -31,8 +31,8 @@ public class Main {
         // Usually this will be on device 0, but there are other overloads
         // that can be used
         UsbCamera camera = setUsbCamera(0, inputStream);
-        // Set the resolution for our camera, since this is over USB
 
+        // set camera parameters
         camera.setResolution(
                 TargetTracking.CAMERA_RESOLUTION_WIDTH,
                 TargetTracking.CAMERA_RESOLUTION_HEIGHT);
@@ -117,6 +117,11 @@ public class Main {
     private static void RunShooter3(UsbCamera camera)
     {
         System.out.println("TRACKING MODE: shooter3");
+
+        // 
+        camera.setBrightness(0);
+        camera.setExposureManual(2);
+
         TargetTracking2017v3_Shooter tracking = new TargetTracking2017v3_Shooter();
         tracking.Initialize(camera,
             (double)TargetTracking.CAMERA_RESOLUTION_WIDTH,
