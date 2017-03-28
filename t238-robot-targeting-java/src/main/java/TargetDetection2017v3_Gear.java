@@ -292,8 +292,15 @@ class TargetTracking2017v3_Gear
         // Grab a frame. If it has a frame time of 0, there was an error.
         // Just skip and continue
         long frameTime = mImageSink.grabFrame(mInputImage);
-        if (frameTime != 0)
+        if (frameTime == 0)
         {
+            mNetworkTable.putBoolean("Gear Camera Ready", false);
+            System.out.println("ERROR: Gear camera error");
+        }
+        else
+        {
+            mNetworkTable.putBoolean("Gear Camera Ready", true);
+
             Mat outputImage = mInputImage;
 
             mPipeline.process(mInputImage);
@@ -302,14 +309,14 @@ class TargetTracking2017v3_Gear
             Target2017v2 target = mTargetDetection.Process(
                     mPipeline.convexHullsOutput());
 
-            double horizontalAngle = 127.0;
-            double verticalAngle = 127.0;
+            double horizontalAngle = Double.MAX_VALUE;
+            double verticalAngle = Double.MAX_VALUE;
 
             Point center = new Point();
+            double distance = 100000.0;
 
             if ((target != null) && (target.GetBoundingRectangle() != null))
             {
-                //System.out.println(String.format("w=%f", target.Width()));
                 center = target.GetCenter();
 
                 // shift the center to the left/right by 2.5 times the current
@@ -340,11 +347,8 @@ class TargetTracking2017v3_Gear
                     break;
                 }
 
-                double distance = CalculateDistance(target,
+                distance = CalculateDistance(target,
                         mResolutionHeight, mHeightDegrees);
-
-                //System.out.println(String.format("%f %f %f",
-                //        original, center.x, target.Width()));
 
                 // calculate the angles relative to the center of the screen
                 horizontalAngle = CalculateAngleOnScreen(
@@ -354,6 +358,7 @@ class TargetTracking2017v3_Gear
             }
             // else - leave the horizontal and vertical = 127.0
 
+            mNetworkTable.putNumber("Gear Distance", distance);
             mNetworkTable.putNumber("Gear Horizontal", horizontalAngle);
             mNetworkTable.putNumber("Gear Vertical", verticalAngle);
 

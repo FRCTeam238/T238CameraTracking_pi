@@ -24,15 +24,15 @@ public class Main {
 
         // This stores our reference to our mjpeg server for streaming the input image
         MjpegServer inputStream = new MjpegServer("MJPEG Server",
-        TargetTracking.CAMERA_STREAM_PORT);
+                TargetTracking.CAMERA_STREAM_PORT);
 
         // USB Camera
         // This gets the image from a USB camera 
         // Usually this will be on device 0, but there are other overloads
         // that can be used
         UsbCamera camera = setUsbCamera(0, inputStream);
-        // Set the resolution for our camera, since this is over USB
 
+        // set camera parameters
         camera.setResolution(
                 TargetTracking.CAMERA_RESOLUTION_WIDTH,
                 TargetTracking.CAMERA_RESOLUTION_HEIGHT);
@@ -57,6 +57,9 @@ public class Main {
                 break;
             case Configuration.TRACKING_MODE_shooter:
                 RunShooter(camera);
+                break;
+            case Configuration.TRACKING_MODE_shooter3:
+                RunShooter3(camera);
                 break;
         }
     }
@@ -111,6 +114,40 @@ public class Main {
         }
     }
 
+    private static void RunShooter3(UsbCamera camera)
+    {
+        System.out.println("TRACKING MODE: shooter3");
+
+        /* this lists all of the property names as seen on the
+         * camera configuration on port 1185
+         */
+        /*
+        VideoProperty[] aa = camera.enumerateProperties();
+        for (int ii = 0; ii < aa.length; ii++)
+        {
+            System.out.println(aa[ii].getName());
+        }
+        */
+        
+
+        // 
+        camera.getProperty("gain").set(14);
+        camera.setBrightness(0);
+        camera.setExposureManual(2);
+
+        TargetTracking2017v3_Shooter tracking = new TargetTracking2017v3_Shooter();
+        tracking.Initialize(camera,
+            (double)TargetTracking.CAMERA_RESOLUTION_WIDTH,
+            (double)TargetTracking.CAMERA_RESOLUTION_HEIGHT,
+            TargetTracking.CAMERA_WIDTH_DEGREES,
+            TargetTracking.CAMERA_HEIGHT_DEGREES);
+
+        while (true)
+        {
+            tracking.Process();
+        }
+    }
+
     private static HttpCamera setHttpCamera(
             String cameraName, MjpegServer server) {
         // Start by grabbing the camera from NetworkTables
@@ -127,7 +164,6 @@ public class Main {
                 e.printStackTrace();
             }
         }
-
 
         HttpCamera camera = null;
         if (!publishingTable.containsSubTable(cameraName)) {
