@@ -431,44 +431,13 @@ class TargetTracking2017v3_Shooter
         return thetaV;
     }
 
-    private double GetCameraShooterAngle()
-    {
-        double angle = TargetTracking.CAMERA_SHOOTER_ANGLE;
-
-        try 
-        {
-            double readAngle = mNetworkTable.getNumber("Shooter Angle");
-            angle = readAngle;
-        }
-        catch (Exception ex)
-        {
-            System.out.println(ex.toString());
-            angle = TargetTracking.CAMERA_SHOOTER_ANGLE;
-            mNetworkTable.putNumber("Shooter Angle", angle);
-        }
-
-        System.out.println(String.format("angle=%f", angle));
-        return angle;
-    }
-
     private double CalculateDistance(double thetaV_radians)
     {
-        //double distance =
-        //    (TargetTracking.SHOOTER_TARGET_HEIGHT_CENTER - 
-        //        TargetTracking.CAMERA_SHOOTER_HEIGHT) /
-        //    Math.tan(Math.toRadians(TargetTracking.CAMERA_SHOOTER_ANGLE)
-        //            + thetaV_radians);
-
         double distance =
             (TargetTracking.SHOOTER_TARGET_HEIGHT_CENTER - 
                 TargetTracking.CAMERA_SHOOTER_HEIGHT) /
-            Math.tan(Math.toRadians(GetCameraShooterAngle())
+            Math.tan(Math.toRadians(TargetTracking.CAMERA_SHOOTER_ANGLE)
                     + thetaV_radians);
-        // add 7 inches for halfway to the center of the target area 
-        // AND add 2 as a fudge factor because our angles are off a little
-        //TODO when the camera gets remounted the fudge factor may need to change
-
-        distance += 7 + 2;
         return distance;
     }
 }
